@@ -1,0 +1,67 @@
+{
+  "nav": {
+    "dashboard": "儀表板",
+    "reconciliation": "對帳管理",
+    "treasury": "資金管理",
+    "invoice": "發票管理",
+    "payments": "付款審批",
+    "audit": "稽核紀錄",
+    "tax": "稅務申報",
+    "whitelist": "白名單",
+    "comingsoon": "即將推出"
+  },
+  "page": {
+    "overview": "財務總覽",
+    "snapshot": "財務快照",
+    "reconciliation": "對帳管理",
+    "reconciliationSub": "比對鏈上交易與 ERP 發票",
+    "treasury": "資金管理",
+    "treasurySub": "跨網路穩定幣資金池即時狀況"
+  },
+  "recon": {
+    "unmatched": "未匹配",
+    "uploadinvoice": "上傳發票",
+    "ar": "新增應收款（AR）",
+    "uploadbill": "上傳帳單",
+    "ap": "新增應付款（AP）",
+    "lastsynced": "最近同步時間"
+  },
+  "action": {
+    "refresh": "重新整理",
+    "exportcsv": "匯出 CSV",
+    "reconcile": "前往對帳",
+    "changeWallet": "更換錢包"
+  },
+  "tab": {
+    "reconcile": "對帳",
+    "matched": "已匹配",
+    "invoice": "發票",
+    "bills": "帳單",
+    "transactions": "鏈上交易"
+  },
+  "ob": {
+    "header": "開始使用 Orgstar",
+    "step1": {
+      "title": "歡迎使用 Orgstar",
+      "sub": "請告訴我們關於您的資訊，以個人化您的工作空間。",
+      "name": "您的姓名",
+      "role": "您的職稱",
+      "company": "公司 / 組織"
+    },
+    "step2": { "title": "追蹤您的錢包" },
+    "step3": { "title": "上傳發票" },
+    "step4": { "title": "上傳帳單" },
+    "step5": {
+      "dashboard": "儀表板",
+      "reconcile": "前往對帳"
+    },
+    "continue": "繼續",
+    "skip": "略過",
+    "uploadcontinue": "上傳並繼續"
+  },
+  "toast": {
+    "copied": "已複製到剪貼簿",
+    "saved": "已儲存",
+    "error": "發生錯誤"
+  }
+}

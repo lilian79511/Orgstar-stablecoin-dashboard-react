@@ -1,0 +1,67 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "reconciliation": "Reconciliation",
+    "treasury": "Treasury",
+    "invoice": "Invoice",
+    "payments": "Approve Payments",
+    "audit": "Audit Trail",
+    "tax": "Tax Filing",
+    "whitelist": "Whitelist",
+    "comingsoon": "Coming Soon"
+  },
+  "page": {
+    "overview": "Overview",
+    "snapshot": "Your financial snapshot",
+    "reconciliation": "Reconciliation",
+    "reconciliationSub": "Match on-chain transactions to ERP invoices · FX diff · Generate 水單",
+    "treasury": "Treasury",
+    "treasurySub": "Real-time stablecoin fund pools across networks"
+  },
+  "recon": {
+    "unmatched": "Unmatched",
+    "uploadinvoice": "Upload Invoice",
+    "ar": "Add incoming payment (AR)",
+    "uploadbill": "Upload Bill",
+    "ap": "Add outgoing payment (AP)",
+    "lastsynced": "Transactions Last Synced"
+  },
+  "action": {
+    "refresh": "Refresh",
+    "exportcsv": "Export CSV",
+    "reconcile": "Reconcile",
+    "changeWallet": "Change Wallet"
+  },
+  "tab": {
+    "reconcile": "Reconcile",
+    "matched": "Matched",
+    "invoice": "Invoice",
+    "bills": "Bills",
+    "transactions": "Transactions On-chain"
+  },
+  "ob": {
+    "header": "Get started with Orgstar",
+    "step1": {
+      "title": "Welcome to Orgstar",
+      "sub": "Tell us a bit about yourself to personalise your workspace.",
+      "name": "Your Name",
+      "role": "Your Role",
+      "company": "Company / Organisation"
+    },
+    "step2": { "title": "Track your wallet" },
+    "step3": { "title": "Upload Invoice" },
+    "step4": { "title": "Upload Bill" },
+    "step5": {
+      "dashboard": "Dashboard",
+      "reconcile": "Reconcile"
+    },
+    "continue": "Continue",
+    "skip": "Skip",
+    "uploadcontinue": "Upload & Continue"
+  },
+  "toast": {
+    "copied": "Copied to clipboard",
+    "saved": "Saved",
+    "error": "Something went wrong"
+  }
+}
