@@ -9,6 +9,7 @@ import {
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { useUiStore } from '@/stores/uiStore'
+import { ChangeDocModal } from '@/components/modals/ChangeDocModal'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 type Tab = 'reconcile' | 'matched' | 'invoice' | 'bills' | 'transactions'
@@ -135,71 +136,100 @@ const INITIAL_PAIRS: Pair[] = [
 // ── ReconcileTab ─────────────────────────────────────────────────────────────
 function ReconcileTab() {
   const [pairs, setPairs] = useState<Pair[]>(INITIAL_PAIRS)
+  const { showToast } = useUiStore()
+
+  // Change modal state
+  const [changeModal, setChangeModal] = useState<{
+    pairId: string
+    mode: 'invoice' | 'bill' | 'tx'
+    currentRef: string
+  } | null>(null)
 
   function confirm(id: string) {
     setPairs((prev) => prev.map((p) => p.id === id ? { ...p, status: 'confirmed' } : p))
   }
 
+  function openChangeDoc(pairId: string, mode: 'invoice' | 'bill' | 'tx', currentRef: string) {
+    setChangeModal({ pairId, mode, currentRef })
+  }
+
+  function handleChangeSelect(ref: string) {
+    if (!changeModal) return
+    showToast(`Linked to ${ref}`, 'success')
+    setChangeModal(null)
+  }
+
   return (
-    <div className="space-y-3">
-      {pairs.map((pair) => {
-        const isConfirmed = pair.status === 'confirmed'
-        const docLabel = pair.doc?.type === 'bill' ? 'Bill (AP)' : 'Invoice (AR)'
-        const txLabel  = pair.doc?.dir === 'sent' || pair.tx?.dir === 'sent'
-          ? 'Transaction (Sent)' : 'Transaction (Received)'
+    <>
+      <div className="space-y-3">
+        {pairs.map((pair) => {
+          const isConfirmed = pair.status === 'confirmed'
+          const docLabel = pair.doc?.type === 'bill' ? 'Bill (AP)' : 'Invoice (AR)'
+          const txLabel  = pair.doc?.dir === 'sent' || pair.tx?.dir === 'sent'
+            ? 'Transaction (Sent)' : 'Transaction (Received)'
+          const docMode  = pair.doc?.type === 'bill' ? 'bill' : 'invoice'
 
-        return (
-          <div key={pair.id} className={`rounded-xl overflow-hidden bg-white dark:bg-[#1a1d27] ${isConfirmed ? 'opacity-60' : ''} ${pair.borderCls}`}>
+          return (
+            <div key={pair.id} className={`rounded-xl overflow-hidden bg-white dark:bg-[#1a1d27] ${isConfirmed ? 'opacity-60' : ''} ${pair.borderCls}`}>
 
-            {/* ── Two-panel body ── */}
-            <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-gray-50 dark:divide-white/5">
+              {/* ── Two-panel body ── */}
+              <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-gray-50 dark:divide-white/5">
 
-              {/* Left: Doc (invoice / bill) */}
-              {pair.doc ? (
-                <div className="p-5 space-y-2 cursor-pointer hover:bg-orange-50/30 dark:hover:bg-orange-500/[0.04] transition-colors">
-                  <div className="flex items-center justify-between mb-1">
-                    <p className="text-[10px] uppercase tracking-widest font-semibold text-gray-400">
-                      {docLabel} <span className="normal-case tracking-normal font-normal text-gray-300 dark:text-gray-600">· click to view</span>
-                    </p>
-                    <button className="text-[10px] text-orange-500 hover:text-orange-600 font-medium flex items-center gap-0.5 transition-colors">
-                      <Repeat2 className="w-3 h-3" /> Change
-                    </button>
-                  </div>
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <p className="text-[10px] font-mono text-gray-400">{pair.doc.ref}</p>
-                      <p className="text-sm font-semibold text-gray-900 dark:text-white mt-0.5">{pair.doc.party}</p>
-                      <p className="text-xs text-gray-400 mt-0.5">{pair.doc.sub}</p>
+                {/* Left: Doc (invoice / bill) */}
+                {pair.doc ? (
+                  <div className="p-5 space-y-2 cursor-pointer hover:bg-orange-50/30 dark:hover:bg-orange-500/[0.04] transition-colors">
+                    <div className="flex items-center justify-between mb-1">
+                      <p className="text-[10px] uppercase tracking-widest font-semibold text-gray-400">
+                        {docLabel} <span className="normal-case tracking-normal font-normal text-gray-300 dark:text-gray-600">· click to view</span>
+                      </p>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); openChangeDoc(pair.id, docMode, pair.doc!.ref) }}
+                        className="text-[10px] text-orange-500 hover:text-orange-600 font-medium flex items-center gap-0.5 transition-colors"
+                      >
+                        <Repeat2 className="w-3 h-3" /> Change
+                      </button>
                     </div>
-                    <p className={`text-sm font-semibold ${pair.doc.dir === 'sent' ? 'text-red-500 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
-                      {pair.doc.amount} <span className="font-normal text-gray-400 text-xs">{pair.doc.currency}</span>
-                    </p>
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <p className="text-[10px] font-mono text-gray-400">{pair.doc.ref}</p>
+                        <p className="text-sm font-semibold text-gray-900 dark:text-white mt-0.5">{pair.doc.party}</p>
+                        <p className="text-xs text-gray-400 mt-0.5">{pair.doc.sub}</p>
+                      </div>
+                      <p className={`text-sm font-semibold ${pair.doc.dir === 'sent' ? 'text-red-500 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
+                        {pair.doc.amount} <span className="font-normal text-gray-400 text-xs">{pair.doc.currency}</span>
+                      </p>
+                    </div>
                   </div>
-                </div>
-              ) : (
-                /* Left: no doc empty state */
-                <div className="p-5 flex flex-col items-center justify-center min-h-[120px] text-center bg-gray-50/40 dark:bg-white/[0.03] space-y-3">
-                  <div className="w-9 h-9 rounded-full bg-gray-200/50 dark:bg-white/[0.07] flex items-center justify-center">
-                    <FileQuestion className="w-4 h-4 text-gray-400" />
-                  </div>
-                  <p className="text-xs text-gray-400">No invoice matched</p>
-                  <button className="px-3 py-1.5 rounded-lg bg-orange-500 hover:bg-orange-600 text-white text-xs font-semibold transition-colors flex items-center gap-1.5">
-                    <Search className="w-3 h-3" /> Find Invoice
-                  </button>
-                </div>
-              )}
-
-              {/* Right: Transaction */}
-              {pair.tx ? (
-                <div className="p-5 space-y-2 cursor-pointer hover:bg-blue-50/20 dark:hover:bg-blue-500/[0.04] transition-colors">
-                  <div className="flex items-center justify-between mb-1">
-                    <p className="text-[10px] uppercase tracking-widest font-semibold text-gray-400">
-                      {txLabel} <span className="normal-case tracking-normal font-normal text-gray-300 dark:text-gray-600">· click to view</span>
-                    </p>
-                    <button className="text-[10px] text-orange-500 hover:text-orange-600 font-medium flex items-center gap-0.5 transition-colors">
-                      <Repeat2 className="w-3 h-3" /> Change
+                ) : (
+                  /* Left: no doc empty state */
+                  <div className="p-5 flex flex-col items-center justify-center min-h-[120px] text-center bg-gray-50/40 dark:bg-white/[0.03] space-y-3">
+                    <div className="w-9 h-9 rounded-full bg-gray-200/50 dark:bg-white/[0.07] flex items-center justify-center">
+                      <FileQuestion className="w-4 h-4 text-gray-400" />
+                    </div>
+                    <p className="text-xs text-gray-400">No invoice matched</p>
+                    <button
+                      onClick={() => openChangeDoc(pair.id, 'invoice', '')}
+                      className="px-3 py-1.5 rounded-lg bg-orange-500 hover:bg-orange-600 text-white text-xs font-semibold transition-colors flex items-center gap-1.5"
+                    >
+                      <Search className="w-3 h-3" /> Find Invoice
                     </button>
                   </div>
+                )}
+
+                {/* Right: Transaction */}
+                {pair.tx ? (
+                  <div className="p-5 space-y-2 cursor-pointer hover:bg-blue-50/20 dark:hover:bg-blue-500/[0.04] transition-colors">
+                    <div className="flex items-center justify-between mb-1">
+                      <p className="text-[10px] uppercase tracking-widest font-semibold text-gray-400">
+                        {txLabel} <span className="normal-case tracking-normal font-normal text-gray-300 dark:text-gray-600">· click to view</span>
+                      </p>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); openChangeDoc(pair.id, 'tx', pair.tx!.hash) }}
+                        className="text-[10px] text-orange-500 hover:text-orange-600 font-medium flex items-center gap-0.5 transition-colors"
+                      >
+                        <Repeat2 className="w-3 h-3" /> Change
+                      </button>
+                    </div>
                   <div className="flex items-start justify-between">
                     <div>
                       <p className="text-[11px] font-mono text-gray-500 dark:text-gray-400 truncate max-w-[200px]">{pair.tx.hash}</p>
@@ -223,14 +253,17 @@ function ReconcileTab() {
                   <p className="text-xs text-gray-400">
                     {pair.doc?.dir === 'sent' ? 'No outgoing transaction linked' : 'No transaction detected'}
                   </p>
-                  <button className="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-white/10 text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors flex items-center gap-1.5">
+                  <button
+                    onClick={() => openChangeDoc(pair.id, 'tx', '')}
+                    className="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-white/10 text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors flex items-center gap-1.5"
+                  >
                     <Search className="w-3 h-3" /> Find Transaction
                   </button>
                 </div>
               )}
-            </div>
+              </div>
 
-            {/* ── Status bar ── */}
+              {/* ── Status bar ── */}
             <div className={`px-5 py-3 flex items-center justify-between gap-3 ${pair.footerCls}`}>
 
               {/* Left: status message */}
@@ -275,10 +308,22 @@ function ReconcileTab() {
               )}
             </div>
 
-          </div>
-        )
-      })}
-    </div>
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Change picker modal */}
+      {changeModal && (
+        <ChangeDocModal
+          isOpen={true}
+          onClose={() => setChangeModal(null)}
+          mode={changeModal.mode}
+          currentRef={changeModal.currentRef}
+          onSelect={handleChangeSelect}
+        />
+      )}
+    </>
   )
 }
 
