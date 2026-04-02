@@ -7,7 +7,7 @@ import ComingSoon from '@/pages/ComingSoon'
 
 export default function App() {
   return (
-    <BrowserRouter basename="/Orgstar-stablecoin-dashboard">
+    <BrowserRouter basename="/Orgstar-stablecoin-dashboard-react">
       <Routes>
         <Route element={<AppLayout />}>
           <Route index element={<Navigate to="/dashboard" replace />} />
