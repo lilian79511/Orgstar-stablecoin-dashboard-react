@@ -2,11 +2,11 @@ import { Outlet } from 'react-router-dom'
 import { Header } from './Header'
 import { Sidebar } from './Sidebar'
 import { ToastContainer } from '@/components/ui/Toast'
-import { useUiStore } from '@/stores/uiStore'
+import { UploadModal } from '@/components/modals/UploadModal'
+import { ChangeWalletModal } from '@/components/modals/ChangeWalletModal'
+import { OnboardingModal } from '@/components/modals/OnboardingModal'
 
 export function AppLayout() {
-  useUiStore()
-
   return (
     <div className="flex h-screen bg-gray-50 dark:bg-[#0f1117] overflow-hidden">
       {/* Sidebar */}
@@ -21,6 +21,10 @@ export function AppLayout() {
       </div>
 
       {/* Global overlays */}
+      <UploadModal type="invoice" />
+      <UploadModal type="bill" />
+      <ChangeWalletModal />
+      <OnboardingModal />
       <ToastContainer />
     </div>
   )

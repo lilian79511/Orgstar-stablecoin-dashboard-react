@@ -6,6 +6,7 @@ import {
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
+import { useUiStore } from '@/stores/uiStore'
 
 // ── Treasury pool breakdown ──────────────────────────────────────────────────
 const pools = [
@@ -35,6 +36,7 @@ const chartMonths = [
 export default function Dashboard() {
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const { openModal } = useUiStore()
 
   return (
     <div className="p-6 space-y-5">
@@ -48,7 +50,7 @@ export default function Dashboard() {
           <p className="text-xs text-gray-400 mt-0.5">{t('page.snapshot')}</p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="secondary" size="sm">
+          <Button variant="secondary" size="sm" onClick={() => openModal('change-wallet')}>
             <Wallet className="w-3.5 h-3.5" />
             {t('action.changeWallet')}
           </Button>

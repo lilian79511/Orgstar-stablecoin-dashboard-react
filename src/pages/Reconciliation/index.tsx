@@ -7,6 +7,7 @@ import {
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
+import { useUiStore } from '@/stores/uiStore'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 type Tab = 'reconcile' | 'matched' | 'invoice' | 'bills' | 'transactions'
@@ -369,6 +370,7 @@ function TransactionsTab() {
 export default function Reconciliation() {
   const { t } = useTranslation()
   const [activeTab, setActiveTab] = useState<Tab>('reconcile')
+  const { openModal, showToast } = useUiStore()
 
   return (
     <div className="p-6 space-y-5">
@@ -386,7 +388,7 @@ export default function Reconciliation() {
             <AlertCircle className="w-2.5 h-2.5" />
             2 {t('recon.unmatched')}
           </Badge>
-          <Button variant="secondary" size="sm">
+          <Button variant="secondary" size="sm" onClick={() => showToast('CSV exported', 'success')}>
             <Download className="w-3.5 h-3.5" />
             {t('action.exportcsv')}
           </Button>
@@ -395,7 +397,7 @@ export default function Reconciliation() {
 
       {/* ── Action bar ─────────────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <Card className="p-4 flex items-center gap-3 hover:bg-orange-50/40 dark:hover:bg-orange-500/5 transition-colors cursor-pointer">
+        <Card onClick={() => openModal('upload-invoice')} className="p-4 flex items-center gap-3 hover:bg-orange-50/40 dark:hover:bg-orange-500/5 transition-colors cursor-pointer">
           <div className="w-9 h-9 rounded-lg bg-orange-50 dark:bg-orange-500/10 flex items-center justify-center shrink-0">
             <Upload className="w-4 h-4 text-orange-500" />
           </div>
@@ -405,7 +407,7 @@ export default function Reconciliation() {
           </div>
           <ChevronRight className="w-4 h-4 text-gray-300 dark:text-gray-600 ml-auto shrink-0" />
         </Card>
-        <Card className="p-4 flex items-center gap-3 hover:bg-violet-50/20 dark:hover:bg-violet-500/5 transition-colors cursor-pointer">
+        <Card onClick={() => openModal('upload-bill')} className="p-4 flex items-center gap-3 hover:bg-violet-50/20 dark:hover:bg-violet-500/5 transition-colors cursor-pointer">
           <div className="w-9 h-9 rounded-lg bg-violet-50 dark:bg-violet-500/10 flex items-center justify-center shrink-0">
             <Upload className="w-4 h-4 text-violet-500" />
           </div>
@@ -425,7 +427,7 @@ export default function Reconciliation() {
               <p className="text-[10px] text-gray-400 mt-0.5">Mar 31, 2026 · 14:32 UTC</p>
             </div>
           </div>
-          <Button variant="secondary" size="sm">
+          <Button variant="secondary" size="sm" onClick={() => showToast('Synced successfully', 'success')}>
             <RefreshCw className="w-3 h-3" />
             {t('action.refresh')}
           </Button>

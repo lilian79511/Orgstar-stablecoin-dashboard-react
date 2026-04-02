@@ -8,7 +8,7 @@ export function Header() {
   const { theme, toggleTheme } = useThemeStore()
   const { lang, setLang } = useLangStore()
   const { profile } = useUserStore()
-  const { openOnboarding, toggleSidebar } = useUiStore()
+  const { openOnboarding, toggleSidebar, showToast } = useUiStore()
 
   return (
     <header className="h-14 shrink-0 bg-white dark:bg-[#13161e] border-b border-gray-100 dark:border-white/5 flex items-center px-4 md:px-6 gap-3 md:gap-4 sticky top-0 z-[400]">
@@ -35,7 +35,10 @@ export function Header() {
       </button>
 
       {/* Bell */}
-      <button className="relative w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-white/8 transition-colors">
+      <button
+        onClick={() => showToast('No new notifications', 'info')}
+        className="relative w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-white/8 transition-colors"
+      >
         <Bell className="w-4 h-4 text-gray-500 dark:text-gray-400" />
         <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-orange-500" />
       </button>
