@@ -1,0 +1,17 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Orgstar</title>
+    <script>
+      // GitHub Pages SPA redirect trick
+      // Store the full URL in sessionStorage and redirect to root
+      sessionStorage.redirect = location.href;
+      location.replace(
+        location.protocol + '//' + location.host +
+        '/Orgstar-stablecoin-dashboard-react/'
+      );
+    </script>
+  </head>
+  <body></body>
+</html>
