@@ -240,6 +240,7 @@ function PaymentDrawer({ payment, onClose }: { payment: Payment | null; onClose:
   const awaitingStep = payment.chain.find((s) => s.status === 'awaiting')
 
   function copyAddress() {
+    if (!payment) return
     navigator.clipboard.writeText(payment.toAddress).then(() => showToast('Address copied', 'success'))
   }
 

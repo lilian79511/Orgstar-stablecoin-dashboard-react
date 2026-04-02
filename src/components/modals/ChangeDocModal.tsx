@@ -43,7 +43,7 @@ export function ChangeDocModal({ isOpen, onClose, mode, currentRef, onSelect }: 
   const filtered = items.filter((item) => {
     const q = query.toLowerCase()
     if (!q) return true
-    return item.ref.toLowerCase().includes(q) || item.party?.toLowerCase().includes(q)
+    return item.ref.toLowerCase().includes(q) || ('party' in item && (item as { party?: string }).party?.toLowerCase().includes(q))
   })
 
   const title = mode === 'invoice' ? 'Change Invoice'

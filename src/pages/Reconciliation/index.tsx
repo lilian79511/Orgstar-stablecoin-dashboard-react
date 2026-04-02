@@ -61,20 +61,6 @@ function PoolTag({ network }: { network: string }) {
   return <span className={`net-chip ${map[network] ?? ''}`}>{network}</span>
 }
 
-function StatusPill({ status }: { status: string }) {
-  const map: Record<string, string> = {
-    matched:   'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400',
-    partial:   'bg-amber-50  dark:bg-amber-500/10  text-amber-700  dark:text-amber-400',
-    unmatched: 'bg-gray-100  dark:bg-white/[0.07]  text-gray-500   dark:text-gray-400',
-    awaiting:  'bg-gray-100  dark:bg-white/[0.07]  text-gray-500   dark:text-gray-400',
-    pending:   'bg-blue-50   dark:bg-blue-500/10   text-blue-700   dark:text-blue-400',
-  }
-  const labels: Record<string, string> = {
-    matched: 'Matched', partial: 'Partial', unmatched: 'Unmatched',
-    awaiting: 'Awaiting', pending: 'Pending',
-  }
-  return <Pill cls={map[status] ?? map.unmatched}>{labels[status] ?? status}</Pill>
-}
 
 // ── Reconcile pairs data ─────────────────────────────────────────────────────
 type DocSide = {
