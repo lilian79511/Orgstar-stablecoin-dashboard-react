@@ -113,8 +113,10 @@ export function OnboardingModal() {
               <p className="text-sm text-gray-500 dark:text-gray-400">Tell us a bit about yourself to personalise your experience.</p>
               <div className="space-y-3">
                 <div>
-                  <label className={labelCls}>Your Name <span className="text-red-400">*</span></label>
+                  <label htmlFor="ob-name" className={labelCls}>Your Name <span className="text-red-400">*</span></label>
                   <input
+                    id="ob-name"
+                    aria-required="true"
                     type="text"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
@@ -123,8 +125,9 @@ export function OnboardingModal() {
                   />
                 </div>
                 <div>
-                  <label className={labelCls}>Your Role</label>
+                  <label htmlFor="ob-role" className={labelCls}>Your Role</label>
                   <select
+                    id="ob-role"
                     value={roleKey}
                     onChange={(e) => setRoleKey(e.target.value as RoleKey)}
                     className={inputCls}
@@ -133,8 +136,9 @@ export function OnboardingModal() {
                   </select>
                 </div>
                 <div>
-                  <label className={labelCls}>Company / Organisation</label>
+                  <label htmlFor="ob-company" className={labelCls}>Company / Organisation</label>
                   <input
+                    id="ob-company"
                     type="text"
                     value={company}
                     onChange={(e) => setCompany(e.target.value)}
@@ -151,8 +155,9 @@ export function OnboardingModal() {
             <div className="space-y-4">
               <p className="text-sm text-gray-500 dark:text-gray-400">Connect a wallet address to track on-chain payments and reconcile transactions.</p>
               <div>
-                <label className={labelCls}>Wallet Address</label>
+                <label htmlFor="ob-wallet" className={labelCls}>Wallet Address</label>
                 <input
+                  id="ob-wallet"
                   type="text"
                   value={wallet}
                   onChange={(e) => setWallet(e.target.value)}
@@ -186,32 +191,32 @@ export function OnboardingModal() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className={labelCls}>Customer *</label>
-                  <input value={invForm.counterparty} onChange={(e) => setInv('counterparty', e.target.value)}
+                  <label htmlFor="ob-inv-party" className={labelCls}>Customer *</label>
+                  <input id="ob-inv-party" value={invForm.counterparty} onChange={(e) => setInv('counterparty', e.target.value)}
                     placeholder="e.g. Acme Corp" className={inputCls} />
                 </div>
                 <div>
-                  <label className={labelCls}>Reference No.</label>
-                  <input value={invForm.ref} onChange={(e) => setInv('ref', e.target.value)}
+                  <label htmlFor="ob-inv-ref" className={labelCls}>Reference No.</label>
+                  <input id="ob-inv-ref" value={invForm.ref} onChange={(e) => setInv('ref', e.target.value)}
                     placeholder="INV-2026…" className={inputCls} />
                 </div>
               </div>
 
               <div className="grid grid-cols-3 gap-3">
                 <div className="col-span-1">
-                  <label className={labelCls}>Amount *</label>
-                  <input value={invForm.amount} onChange={(e) => setInv('amount', e.target.value)}
+                  <label htmlFor="ob-inv-amount" className={labelCls}>Amount *</label>
+                  <input id="ob-inv-amount" aria-required="true" value={invForm.amount} onChange={(e) => setInv('amount', e.target.value)}
                     placeholder="0.00" type="number" min="0" className={inputCls} />
                 </div>
                 <div>
-                  <label className={labelCls}>Currency</label>
-                  <select value={invForm.currency} onChange={(e) => setInv('currency', e.target.value)} className={inputCls}>
+                  <label htmlFor="ob-inv-currency" className={labelCls}>Currency</label>
+                  <select id="ob-inv-currency" value={invForm.currency} onChange={(e) => setInv('currency', e.target.value)} className={inputCls}>
                     {CURRENCIES.map((c) => <option key={c}>{c}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className={labelCls}>Network</label>
-                  <select value={invForm.network} onChange={(e) => setInv('network', e.target.value)} className={inputCls}>
+                  <label htmlFor="ob-inv-network" className={labelCls}>Network</label>
+                  <select id="ob-inv-network" value={invForm.network} onChange={(e) => setInv('network', e.target.value)} className={inputCls}>
                     {NETWORKS.map((n) => <option key={n}>{n}</option>)}
                   </select>
                 </div>
@@ -219,18 +224,18 @@ export function OnboardingModal() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className={labelCls}>Invoice Date</label>
-                  <input value={invForm.date} onChange={(e) => setInv('date', e.target.value)} type="date" className={inputCls} />
+                  <label htmlFor="ob-inv-date" className={labelCls}>Invoice Date</label>
+                  <input id="ob-inv-date" value={invForm.date} onChange={(e) => setInv('date', e.target.value)} type="date" className={inputCls} />
                 </div>
                 <div>
-                  <label className={labelCls}>Due Date</label>
-                  <input value={invForm.dueDate} onChange={(e) => setInv('dueDate', e.target.value)} type="date" className={inputCls} />
+                  <label htmlFor="ob-inv-duedate" className={labelCls}>Due Date</label>
+                  <input id="ob-inv-duedate" value={invForm.dueDate} onChange={(e) => setInv('dueDate', e.target.value)} type="date" className={inputCls} />
                 </div>
               </div>
 
               <div>
-                <label className={labelCls}>Description / Services</label>
-                <input value={invForm.category} onChange={(e) => setInv('category', e.target.value)}
+                <label htmlFor="ob-inv-category" className={labelCls}>Description / Services</label>
+                <input id="ob-inv-category" value={invForm.category} onChange={(e) => setInv('category', e.target.value)}
                   placeholder="e.g. Consulting services for Q1 2026" className={inputCls} />
               </div>
             </div>
@@ -248,32 +253,32 @@ export function OnboardingModal() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className={labelCls}>Vendor *</label>
-                  <input value={billForm.counterparty} onChange={(e) => setBill('counterparty', e.target.value)}
+                  <label htmlFor="ob-bill-party" className={labelCls}>Vendor *</label>
+                  <input id="ob-bill-party" value={billForm.counterparty} onChange={(e) => setBill('counterparty', e.target.value)}
                     placeholder="e.g. AWS Services" className={inputCls} />
                 </div>
                 <div>
-                  <label className={labelCls}>Reference No.</label>
-                  <input value={billForm.ref} onChange={(e) => setBill('ref', e.target.value)}
+                  <label htmlFor="ob-bill-ref" className={labelCls}>Reference No.</label>
+                  <input id="ob-bill-ref" value={billForm.ref} onChange={(e) => setBill('ref', e.target.value)}
                     placeholder="PAY-2026…" className={inputCls} />
                 </div>
               </div>
 
               <div className="grid grid-cols-3 gap-3">
                 <div className="col-span-1">
-                  <label className={labelCls}>Amount *</label>
-                  <input value={billForm.amount} onChange={(e) => setBill('amount', e.target.value)}
+                  <label htmlFor="ob-bill-amount" className={labelCls}>Amount *</label>
+                  <input id="ob-bill-amount" aria-required="true" value={billForm.amount} onChange={(e) => setBill('amount', e.target.value)}
                     placeholder="0.00" type="number" min="0" className={inputCls} />
                 </div>
                 <div>
-                  <label className={labelCls}>Currency</label>
-                  <select value={billForm.currency} onChange={(e) => setBill('currency', e.target.value)} className={inputCls}>
+                  <label htmlFor="ob-bill-currency" className={labelCls}>Currency</label>
+                  <select id="ob-bill-currency" value={billForm.currency} onChange={(e) => setBill('currency', e.target.value)} className={inputCls}>
                     {CURRENCIES.map((c) => <option key={c}>{c}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className={labelCls}>Network</label>
-                  <select value={billForm.network} onChange={(e) => setBill('network', e.target.value)} className={inputCls}>
+                  <label htmlFor="ob-bill-network" className={labelCls}>Network</label>
+                  <select id="ob-bill-network" value={billForm.network} onChange={(e) => setBill('network', e.target.value)} className={inputCls}>
                     {NETWORKS.map((n) => <option key={n}>{n}</option>)}
                   </select>
                 </div>
@@ -281,18 +286,18 @@ export function OnboardingModal() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className={labelCls}>Bill Date</label>
-                  <input value={billForm.date} onChange={(e) => setBill('date', e.target.value)} type="date" className={inputCls} />
+                  <label htmlFor="ob-bill-date" className={labelCls}>Bill Date</label>
+                  <input id="ob-bill-date" value={billForm.date} onChange={(e) => setBill('date', e.target.value)} type="date" className={inputCls} />
                 </div>
                 <div>
-                  <label className={labelCls}>Payment Due</label>
-                  <input value={billForm.dueDate} onChange={(e) => setBill('dueDate', e.target.value)} type="date" className={inputCls} />
+                  <label htmlFor="ob-bill-duedate" className={labelCls}>Payment Due</label>
+                  <input id="ob-bill-duedate" value={billForm.dueDate} onChange={(e) => setBill('dueDate', e.target.value)} type="date" className={inputCls} />
                 </div>
               </div>
 
               <div>
-                <label className={labelCls}>Category</label>
-                <input value={billForm.category} onChange={(e) => setBill('category', e.target.value)}
+                <label htmlFor="ob-bill-category" className={labelCls}>Category</label>
+                <input id="ob-bill-category" value={billForm.category} onChange={(e) => setBill('category', e.target.value)}
                   placeholder="e.g. Cloud Infrastructure" className={inputCls} />
               </div>
             </div>

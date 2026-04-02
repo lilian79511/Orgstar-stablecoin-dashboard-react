@@ -55,18 +55,18 @@ export function UploadModal({ type }: Props) {
   const labelCls = 'block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1'
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} maxWidth="max-w-lg">
+    <Modal isOpen={isOpen} onClose={onClose} maxWidth="max-w-lg" labelledby={`${type}-modal-title`}>
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-white/[0.06]">
         <div className="flex items-center gap-2.5">
           <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${accent === 'orange' ? 'bg-orange-50 dark:bg-orange-500/10' : 'bg-violet-50 dark:bg-violet-500/10'}`}>
             {isInvoice ? <FileText className={`w-3.5 h-3.5 text-orange-500`} /> : <Upload className="w-3.5 h-3.5 text-violet-500" />}
           </div>
-          <h3 className="font-grotesk font-semibold text-sm text-gray-900 dark:text-white">
+          <h3 id={`${type}-modal-title`} className="font-grotesk font-semibold text-sm text-gray-900 dark:text-white">
             {isInvoice ? 'New Invoice' : 'New Bill'}
           </h3>
         </div>
-        <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors">
+        <button onClick={onClose} aria-label="Close" className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors">
           <X className="w-4 h-4" />
         </button>
       </div>
@@ -76,14 +76,14 @@ export function UploadModal({ type }: Props) {
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className={labelCls}>{isInvoice ? 'Customer *' : 'Vendor *'}</label>
-            <input value={form.counterparty} onChange={(e) => set('counterparty', e.target.value)}
+            <label htmlFor={`${type}-counterparty`} className={labelCls}>{isInvoice ? 'Customer *' : 'Vendor *'}</label>
+            <input id={`${type}-counterparty`} aria-required="true" value={form.counterparty} onChange={(e) => set('counterparty', e.target.value)}
               placeholder={isInvoice ? 'e.g. Acme Corp' : 'e.g. AWS Services'}
               className={inputCls} />
           </div>
           <div>
-            <label className={labelCls}>Reference No.</label>
-            <input value={form.ref} onChange={(e) => set('ref', e.target.value)}
+            <label htmlFor={`${type}-ref`} className={labelCls}>Reference No.</label>
+            <input id={`${type}-ref`} value={form.ref} onChange={(e) => set('ref', e.target.value)}
               placeholder={isInvoice ? 'INV-2026…' : 'PAY-2026…'}
               className={inputCls} />
           </div>
@@ -91,20 +91,20 @@ export function UploadModal({ type }: Props) {
 
         <div className="grid grid-cols-3 gap-3">
           <div className="col-span-1">
-            <label className={labelCls}>Amount *</label>
-            <input value={form.amount} onChange={(e) => set('amount', e.target.value)}
+            <label htmlFor={`${type}-amount`} className={labelCls}>Amount *</label>
+            <input id={`${type}-amount`} aria-required="true" value={form.amount} onChange={(e) => set('amount', e.target.value)}
               placeholder="0.00" type="number" min="0"
               className={inputCls} />
           </div>
           <div>
-            <label className={labelCls}>Currency</label>
-            <select value={form.currency} onChange={(e) => set('currency', e.target.value)} className={inputCls}>
+            <label htmlFor={`${type}-currency`} className={labelCls}>Currency</label>
+            <select id={`${type}-currency`} value={form.currency} onChange={(e) => set('currency', e.target.value)} className={inputCls}>
               {CURRENCIES.map((c) => <option key={c}>{c}</option>)}
             </select>
           </div>
           <div>
-            <label className={labelCls}>Network</label>
-            <select value={form.network} onChange={(e) => set('network', e.target.value)} className={inputCls}>
+            <label htmlFor={`${type}-network`} className={labelCls}>Network</label>
+            <select id={`${type}-network`} value={form.network} onChange={(e) => set('network', e.target.value)} className={inputCls}>
               {NETWORKS.map((n) => <option key={n}>{n}</option>)}
             </select>
           </div>
@@ -112,27 +112,27 @@ export function UploadModal({ type }: Props) {
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className={labelCls}>{isInvoice ? 'Invoice Date' : 'Bill Date'}</label>
-            <input value={form.date} onChange={(e) => set('date', e.target.value)}
+            <label htmlFor={`${type}-date`} className={labelCls}>{isInvoice ? 'Invoice Date' : 'Bill Date'}</label>
+            <input id={`${type}-date`} value={form.date} onChange={(e) => set('date', e.target.value)}
               type="date" className={inputCls} />
           </div>
           <div>
-            <label className={labelCls}>{isInvoice ? 'Due Date' : 'Payment Due'}</label>
-            <input value={form.dueDate} onChange={(e) => set('dueDate', e.target.value)}
+            <label htmlFor={`${type}-duedate`} className={labelCls}>{isInvoice ? 'Due Date' : 'Payment Due'}</label>
+            <input id={`${type}-duedate`} value={form.dueDate} onChange={(e) => set('dueDate', e.target.value)}
               type="date" className={inputCls} />
           </div>
         </div>
 
         <div>
-          <label className={labelCls}>{isInvoice ? 'Description / Services' : 'Category'}</label>
-          <input value={form.category} onChange={(e) => set('category', e.target.value)}
+          <label htmlFor={`${type}-category`} className={labelCls}>{isInvoice ? 'Description / Services' : 'Category'}</label>
+          <input id={`${type}-category`} value={form.category} onChange={(e) => set('category', e.target.value)}
             placeholder={isInvoice ? 'e.g. Consulting services for Q1 2026' : 'e.g. Cloud Infrastructure'}
             className={inputCls} />
         </div>
 
         <div>
-          <label className={labelCls}>Notes (optional)</label>
-          <textarea value={form.notes} onChange={(e) => set('notes', e.target.value)}
+          <label htmlFor={`${type}-notes`} className={labelCls}>Notes (optional)</label>
+          <textarea id={`${type}-notes`} value={form.notes} onChange={(e) => set('notes', e.target.value)}
             rows={2} placeholder="Any additional notes…"
             className={`${inputCls} resize-none`} />
         </div>

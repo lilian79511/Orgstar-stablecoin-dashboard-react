@@ -639,10 +639,14 @@ export default function Reconciliation() {
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center gap-0 border-b border-gray-100 dark:border-white/[0.08] overflow-x-auto">
+      <div role="tablist" className="flex items-center gap-0 border-b border-gray-100 dark:border-white/[0.08] overflow-x-auto">
         {tabs.map(({ key, label }) => (
           <button
             key={key}
+            role="tab"
+            id={`tab-${key}`}
+            aria-selected={activeTab === key}
+            aria-controls={`panel-${key}`}
             onClick={() => setActiveTab(key)}
             className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors whitespace-nowrap -mb-px
               ${activeTab === key
@@ -656,11 +660,13 @@ export default function Reconciliation() {
       </div>
 
       {/* Tab content */}
-      {activeTab === 'reconcile'    && <ReconcileTab />}
-      {activeTab === 'invoice'      && <InvoiceTab />}
-      {activeTab === 'bills'        && <BillsTab />}
-      {activeTab === 'matched'      && <MatchedTab />}
-      {activeTab === 'transactions' && <TransactionsTab />}
+      <div role="tabpanel" id={`panel-${activeTab}`} aria-labelledby={`tab-${activeTab}`}>
+        {activeTab === 'reconcile'    && <ReconcileTab />}
+        {activeTab === 'invoice'      && <InvoiceTab />}
+        {activeTab === 'bills'        && <BillsTab />}
+        {activeTab === 'matched'      && <MatchedTab />}
+        {activeTab === 'transactions' && <TransactionsTab />}
+      </div>
 
     </div>
   )

@@ -113,10 +113,10 @@ export default function Dashboard() {
           </div>
           <div className="mt-2 flex-1 divide-y divide-gray-100/60 dark:divide-white/[0.04]">
             {pendingItems.map((item) => (
-              <div
+              <button
                 key={item.ref}
                 onClick={() => navigate('/approvals')}
-                className="flex items-center justify-between px-0 py-1.5 hover:bg-gray-100/40 dark:hover:bg-white/[0.05] rounded-none cursor-pointer transition-colors"
+                className="w-full flex items-center justify-between px-0 py-1.5 hover:bg-gray-100/40 dark:hover:bg-white/[0.05] rounded transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 text-left"
               >
                 <div className="flex-1 min-w-0">
                   <p className="text-[11px] font-mono text-gray-400 truncate">{item.ref}</p>
@@ -128,7 +128,7 @@ export default function Dashboard() {
                   </span>
                   <Badge className={`shrink-0 ${item.badgeCls}`}>{item.badge}</Badge>
                 </div>
-              </div>
+              </button>
             ))}
           </div>
           <div className="pt-2 mt-1 border-t border-gray-50 dark:border-white/5">
@@ -154,17 +154,17 @@ export default function Dashboard() {
           </div>
           <div className="mt-2 flex-1 divide-y divide-gray-100/60 dark:divide-white/[0.04]">
             {reconItems.map((item) => (
-              <div
+              <button
                 key={item.hash}
                 onClick={() => navigate('/reconciliation')}
-                className="flex items-center justify-between px-0 py-1.5 hover:bg-gray-100/40 dark:hover:bg-white/[0.05] rounded-none cursor-pointer transition-colors"
+                className="w-full flex items-center justify-between px-0 py-1.5 hover:bg-gray-100/40 dark:hover:bg-white/[0.05] rounded transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 text-left"
               >
                 <div className="flex-1 min-w-0">
                   <p className="text-[11px] font-mono text-gray-400 truncate">{item.hash}</p>
                   <p className="text-xs font-medium text-gray-800 dark:text-gray-200 truncate">{item.desc}</p>
                 </div>
                 <Badge className={`shrink-0 ml-2 ${item.badgeCls}`}>{item.badge}</Badge>
-              </div>
+              </button>
             ))}
           </div>
           <div className="pt-2 mt-1 border-t border-gray-50 dark:border-white/5">

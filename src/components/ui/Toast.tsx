@@ -25,6 +25,7 @@ function ToastItem({ toast }: { toast: ToastType }) {
       <span className="flex-1 text-sm font-medium text-gray-800 dark:text-gray-200">{toast.message}</span>
       <button
         onClick={() => removeToast(toast.id)}
+        aria-label="Dismiss"
         className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
       >
         <X className="w-3.5 h-3.5" />
@@ -37,7 +38,7 @@ export function ToastContainer() {
   const toasts = useUiStore((s) => s.toasts)
 
   return (
-    <div className="fixed bottom-6 right-6 flex flex-col gap-2 z-[400]">
+    <div className="fixed bottom-6 right-6 flex flex-col gap-2 z-[400]" aria-live="polite" aria-atomic="false">
       {toasts.map((t) => <ToastItem key={t.id} toast={t} />)}
     </div>
   )

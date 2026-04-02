@@ -442,12 +442,16 @@ export default function Approvals() {
 
       {/* Tabs + Sort */}
       <div className="flex items-center justify-between gap-4 border-b border-gray-100 dark:border-white/[0.08]">
-        <div className="flex items-center overflow-x-auto">
+        <div role="tablist" className="flex items-center overflow-x-auto">
           {TABS.map(({ key, label }) => {
             const badge = key === 'todo' ? todoCount : key === 'waiting-sig' ? waitingCount : 0
             return (
               <button
                 key={key}
+                role="tab"
+                id={`tab-${key}`}
+                aria-selected={tab === key}
+                aria-controls={`panel-${key}`}
                 onClick={() => setTab(key)}
                 className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors whitespace-nowrap -mb-px
                   ${tab === key
@@ -477,6 +481,7 @@ export default function Approvals() {
       </div>
 
       {/* Table */}
+      <div role="tabpanel" id={`panel-${tab}`} aria-labelledby={`tab-${tab}`}>
       <div className="card bg-white dark:bg-[#1a1d27] overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
@@ -485,6 +490,7 @@ export default function Approvals() {
                 {['Created', 'ID', 'Payee', 'Amount', 'Purpose', 'Status', 'Approval Deadline', ''].map((h) => (
                   <th
                     key={h}
+                    scope="col"
                     className={`px-5 py-3 text-[10px] font-semibold text-gray-400 uppercase tracking-wide text-left whitespace-nowrap ${h === 'Amount' ? 'text-right' : ''}`}
                   >
                     {h}
@@ -539,6 +545,7 @@ export default function Approvals() {
             </tbody>
           </table>
         </div>
+      </div>
       </div>
 
       {/* Detail drawer */}

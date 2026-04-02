@@ -34,6 +34,7 @@ export function Button({
       className={`
         inline-flex items-center justify-center gap-2 rounded-lg font-medium
         transition-colors disabled:opacity-50 disabled:cursor-not-allowed
+        focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-900
         ${variantClasses[variant]} ${sizeClasses[size]} ${className}
       `}
       {...props}

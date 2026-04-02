@@ -206,13 +206,13 @@ export default function Treasury() {
         {/* Filter bar */}
         <div className="flex items-center gap-2 p-4 border-b border-gray-100 dark:border-white/[0.06] flex-wrap">
           <p className="text-xs font-semibold text-gray-700 dark:text-gray-300 mr-1">Transactions</p>
-          <select value={statusF} onChange={(e) => setStatusF(e.target.value)} className="filter-select">
+          <select value={statusF} onChange={(e) => setStatusF(e.target.value)} aria-label="Filter by status" className="filter-select">
             {STATUS_OPTS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
-          <select value={poolF} onChange={(e) => setPoolF(e.target.value)} className="filter-select">
+          <select value={poolF} onChange={(e) => setPoolF(e.target.value)} aria-label="Filter by pool" className="filter-select">
             {POOL_OPTS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
-          <select value={sort} onChange={(e) => setSort(e.target.value)} className="filter-select">
+          <select value={sort} onChange={(e) => setSort(e.target.value)} aria-label="Sort transactions" className="filter-select">
             {SORT_OPTS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
         </div>
@@ -221,7 +221,7 @@ export default function Treasury() {
           <thead>
             <tr className="border-b border-gray-100 dark:border-white/[0.06]">
               {['Dir', 'Reference', 'Company', 'Amount', 'Status', 'Date', ''].map((h) => (
-                <th key={h} className={`px-5 py-2.5 text-[10px] font-semibold text-gray-400 uppercase tracking-wide ${h === 'Amount' ? 'text-right' : 'text-left'}`}>{h}</th>
+                <th key={h} scope="col" className={`px-5 py-2.5 text-[10px] font-semibold text-gray-400 uppercase tracking-wide ${h === 'Amount' ? 'text-right' : 'text-left'}`}>{h}</th>
               ))}
             </tr>
           </thead>
@@ -229,7 +229,7 @@ export default function Treasury() {
             {rows.map((tx, i) => {
               const Icon = txStatusIcon[tx.status] ?? HelpCircle
               return (
-                <tr key={i} className="hover:bg-gray-50/60 dark:hover:bg-white/[0.03] transition-colors cursor-pointer">
+                <tr key={i} className="hover:bg-gray-50/60 dark:hover:bg-white/[0.03] transition-colors">{/* hover only — no row-level onClick */}
                   <td className="px-5 py-3.5">
                     {tx.dir === 'in'
                       ? <Pill cls="bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"><ArrowDown className="w-2.5 h-2.5" />IN</Pill>

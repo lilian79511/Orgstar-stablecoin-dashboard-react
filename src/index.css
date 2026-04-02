@@ -1,6 +1,3 @@
-/* Fonts — must come before @tailwind directives */
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -33,6 +30,15 @@
   /* Date input calendar icon */
   input[type="date"]:not(.filter-select)::-webkit-calendar-picker-indicator { cursor: pointer; opacity: 0.5; margin-right: 8px; }
   .dark input[type="date"]:not(.filter-select)::-webkit-calendar-picker-indicator { filter: invert(1); opacity: 0.5; cursor: pointer; margin-right: 8px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
 }
 
 @layer components {

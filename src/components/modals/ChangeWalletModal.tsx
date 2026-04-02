@@ -46,16 +46,16 @@ export function ChangeWalletModal() {
   const selectedNet = NETWORKS.find((n) => n.id === network) ?? NETWORKS[0]
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} maxWidth="max-w-md">
+    <Modal isOpen={isOpen} onClose={onClose} maxWidth="max-w-md" labelledby="wallet-modal-title">
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-white/[0.06]">
         <div className="flex items-center gap-2.5">
           <div className="w-7 h-7 rounded-lg bg-orange-50 dark:bg-orange-500/10 flex items-center justify-center">
             <Wallet className="w-3.5 h-3.5 text-orange-500" />
           </div>
-          <h3 className="font-grotesk font-semibold text-sm text-gray-900 dark:text-white">Change Wallet</h3>
+          <h3 id="wallet-modal-title" className="font-grotesk font-semibold text-sm text-gray-900 dark:text-white">Change Wallet</h3>
         </div>
-        <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors">
+        <button onClick={onClose} aria-label="Close" className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors">
           <X className="w-4 h-4" />
         </button>
       </div>
@@ -100,6 +100,8 @@ export function ChangeWalletModal() {
           <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1.5">Network</p>
           <button
             onClick={() => setShowNetworks((v) => !v)}
+            aria-expanded={showNetworks}
+            aria-haspopup="listbox"
             className="w-full flex items-center gap-2 px-3 py-2.5 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-white/[0.03] text-sm text-gray-700 dark:text-gray-300 hover:border-gray-300 dark:hover:border-white/20 transition-colors"
           >
             <span className={`w-2 h-2 rounded-full ${selectedNet.color}`} />
@@ -107,10 +109,12 @@ export function ChangeWalletModal() {
             <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${showNetworks ? 'rotate-180' : ''}`} />
           </button>
           {showNetworks && (
-            <div className="absolute z-10 mt-1 w-full bg-white dark:bg-[#1e2130] border border-gray-100 dark:border-white/[0.08] rounded-lg shadow-lg overflow-hidden">
+            <div role="listbox" className="absolute z-10 mt-1 w-full bg-white dark:bg-[#1e2130] border border-gray-100 dark:border-white/[0.08] rounded-lg shadow-lg overflow-hidden">
               {NETWORKS.map((n) => (
                 <button
                   key={n.id}
+                  role="option"
+                  aria-selected={n.id === network}
                   onClick={() => { setNetwork(n.id); setShowNetworks(false) }}
                   className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
                 >
@@ -124,9 +128,11 @@ export function ChangeWalletModal() {
 
         {/* Address input */}
         <div>
-          <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1.5">Wallet Address</p>
+          <label htmlFor="wallet-address" className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1.5 block">Wallet Address</label>
           <input
+            id="wallet-address"
             type="text"
+            aria-label="Wallet address"
             value={address}
             onChange={(e) => setAddress(e.target.value)}
             placeholder="0x… or TQ…"

@@ -15,6 +15,7 @@ export function Header() {
       {/* Mobile hamburger */}
       <button
         onClick={toggleSidebar}
+        aria-label="Toggle sidebar"
         className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-white/8 transition-colors text-gray-500 dark:text-gray-400 md:hidden"
       >
         <Menu className="w-4 h-4" />
@@ -28,7 +29,7 @@ export function Header() {
       {/* Onboarding preview trigger */}
       <button
         onClick={openOnboarding}
-        title="Preview onboarding"
+        aria-label="Open getting started guide"
         className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-orange-50 dark:hover:bg-orange-500/10 transition-colors text-orange-400 hover:text-orange-500"
       >
         <PlayCircle className="w-4 h-4" />
@@ -37,6 +38,7 @@ export function Header() {
       {/* Bell */}
       <button
         onClick={() => showToast('No new notifications', 'info')}
+        aria-label="Notifications"
         className="relative w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-white/8 transition-colors"
       >
         <Bell className="w-4 h-4 text-gray-500 dark:text-gray-400" />
@@ -66,6 +68,7 @@ export function Header() {
       {/* Dark mode toggle */}
       <button
         onClick={toggleTheme}
+        aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
         className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-white/8 transition-colors"
       >
         {theme === 'dark' ? (
