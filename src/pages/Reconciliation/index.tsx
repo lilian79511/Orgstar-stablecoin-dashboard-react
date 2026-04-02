@@ -10,6 +10,28 @@ import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { useUiStore } from '@/stores/uiStore'
 import { ChangeDocModal } from '@/components/modals/ChangeDocModal'
+import { InvoiceDrawer } from '@/components/drawers/InvoiceDrawer'
+import { TxDrawer } from '@/components/drawers/TxDrawer'
+
+// ── Lookup tables for Change modal ──────────────────────────────────────────
+const INV_LOOKUP: Record<string, { party: string; sub: string; amount: string; currency: string }> = {
+  'INV-20260318-001': { party: 'Acme Corp',        sub: 'Due Apr 1, 2026',  amount: '5,000',  currency: 'USDC' },
+  'INV-20260317-002': { party: 'Global Trade Ltd', sub: 'Due Mar 30, 2026', amount: '12,000', currency: 'USDC' },
+  'INV-20260316-003': { party: 'Sunrise Imports',  sub: 'Due Mar 28, 2026', amount: '5,000',  currency: 'USDC' },
+  'INV-20260322-004': { party: 'Delta Components', sub: 'Due Apr 5, 2026',  amount: '3,500',  currency: 'USDT' },
+}
+const BILL_LOOKUP: Record<string, { party: string; sub: string; amount: string; currency: string }> = {
+  'PAY-20260310-007': { party: 'AWS Services', sub: 'Cloud Infrastructure', amount: '2,200', currency: 'USDC' },
+  'PAY-20260314-006': { party: 'Office Depot',  sub: 'Office Supplies',     amount: '450',   currency: 'USDC' },
+  'PAY-20260301-003': { party: 'Vendor Inc',    sub: 'SaaS Subscription',   amount: '8,750', currency: 'USDT' },
+}
+const TX_LOOKUP: Record<string, { time: string; amount: string; currency: string; dir: 'received' | 'sent' }> = {
+  '0x5e6f7a8b9c0d1e2f…': { time: 'Mar 18 · 14:20 UTC', amount: '+5,000',  currency: 'USDC', dir: 'received' },
+  '0x9a8b7c6d5e4f3a2b…': { time: 'Mar 16 · 11:02 UTC', amount: '+4,900',  currency: 'USDC', dir: 'received' },
+  '0xb2d144fa…':         { time: 'Mar 20 · 09:15 UTC', amount: '+8,200',  currency: 'USDC', dir: 'received' },
+  '0xa1b2c3d4e5f6a7b8…': { time: 'Mar 10 · 16:06 UTC', amount: '−2,200',  currency: 'USDC', dir: 'sent' },
+  '0xe4f7a901…':         { time: 'Mar 17 · 10:05 UTC', amount: '+12,000', currency: 'USDC', dir: 'received' },
+}
 
 // ── Types ────────────────────────────────────────────────────────────────────
 type Tab = 'reconcile' | 'matched' | 'invoice' | 'bills' | 'transactions'
@@ -138,12 +160,12 @@ function ReconcileTab() {
   const [pairs, setPairs] = useState<Pair[]>(INITIAL_PAIRS)
   const { showToast } = useUiStore()
 
-  // Change modal state
-  const [changeModal, setChangeModal] = useState<{
-    pairId: string
-    mode: 'invoice' | 'bill' | 'tx'
-    currentRef: string
-  } | null>(null)
+  // Change picker modal
+  const [changeModal, setChangeModal] = useState<{ pairId: string; mode: 'invoice' | 'bill' | 'tx'; currentRef: string } | null>(null)
+
+  // Invoice / TX detail drawers
+  const [invDrawer, setInvDrawer]  = useState<{ type: 'invoice' | 'bill'; ref: string; party: string; sub: string; amount: string; currency: string } | null>(null)
+  const [txDrawer,  setTxDrawer]   = useState<{ hash: string; time: string; amount: string; currency: string; dir: 'received' | 'sent' } | null>(null)
 
   function confirm(id: string) {
     setPairs((prev) => prev.map((p) => p.id === id ? { ...p, status: 'confirmed' } : p))
@@ -155,6 +177,27 @@ function ReconcileTab() {
 
   function handleChangeSelect(ref: string) {
     if (!changeModal) return
+    const { pairId, mode } = changeModal
+    // Actually update the pair data
+    setPairs((prev) => prev.map((p) => {
+      if (p.id !== pairId) return p
+      if (mode === 'invoice') {
+        const d = INV_LOOKUP[ref]
+        if (!d) return p
+        return { ...p, doc: { type: 'invoice', ref, party: d.party, sub: d.sub, amount: d.amount, currency: d.currency, dir: 'received' }, status: 'suggested' }
+      }
+      if (mode === 'bill') {
+        const d = BILL_LOOKUP[ref]
+        if (!d) return p
+        return { ...p, doc: { type: 'bill', ref, party: d.party, sub: d.sub, amount: d.amount, currency: d.currency, dir: 'sent' }, status: p.tx ? 'suggested' : 'awaiting' }
+      }
+      if (mode === 'tx') {
+        const d = TX_LOOKUP[ref]
+        if (!d) return p
+        return { ...p, tx: { hash: ref, time: d.time, amount: d.amount, currency: d.currency, dir: d.dir }, status: p.doc ? 'suggested' : 'no-doc' }
+      }
+      return p
+    }))
     showToast(`Linked to ${ref}`, 'success')
     setChangeModal(null)
   }
@@ -177,7 +220,10 @@ function ReconcileTab() {
 
                 {/* Left: Doc (invoice / bill) */}
                 {pair.doc ? (
-                  <div className="p-5 space-y-2 cursor-pointer hover:bg-orange-50/30 dark:hover:bg-orange-500/[0.04] transition-colors">
+                  <div
+                    className="p-5 space-y-2 cursor-pointer hover:bg-orange-50/30 dark:hover:bg-orange-500/[0.04] transition-colors"
+                    onClick={() => setInvDrawer({ type: pair.doc!.type, ref: pair.doc!.ref, party: pair.doc!.party, sub: pair.doc!.sub, amount: pair.doc!.amount, currency: pair.doc!.currency })}
+                  >
                     <div className="flex items-center justify-between mb-1">
                       <p className="text-[10px] uppercase tracking-widest font-semibold text-gray-400">
                         {docLabel} <span className="normal-case tracking-normal font-normal text-gray-300 dark:text-gray-600">· click to view</span>
@@ -218,7 +264,10 @@ function ReconcileTab() {
 
                 {/* Right: Transaction */}
                 {pair.tx ? (
-                  <div className="p-5 space-y-2 cursor-pointer hover:bg-blue-50/20 dark:hover:bg-blue-500/[0.04] transition-colors">
+                  <div
+                    className="p-5 space-y-2 cursor-pointer hover:bg-blue-50/20 dark:hover:bg-blue-500/[0.04] transition-colors"
+                    onClick={() => setTxDrawer({ hash: pair.tx!.hash, time: pair.tx!.time, amount: pair.tx!.amount, currency: pair.tx!.currency, dir: pair.tx!.dir })}
+                  >
                     <div className="flex items-center justify-between mb-1">
                       <p className="text-[10px] uppercase tracking-widest font-semibold text-gray-400">
                         {txLabel} <span className="normal-case tracking-normal font-normal text-gray-300 dark:text-gray-600">· click to view</span>
@@ -323,6 +372,20 @@ function ReconcileTab() {
           onSelect={handleChangeSelect}
         />
       )}
+
+      {/* Invoice / Bill detail drawer */}
+      <InvoiceDrawer
+        isOpen={invDrawer !== null}
+        onClose={() => setInvDrawer(null)}
+        data={invDrawer}
+      />
+
+      {/* Transaction detail drawer */}
+      <TxDrawer
+        isOpen={txDrawer !== null}
+        onClose={() => setTxDrawer(null)}
+        data={txDrawer}
+      />
     </>
   )
 }

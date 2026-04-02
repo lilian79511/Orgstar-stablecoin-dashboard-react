@@ -4,6 +4,7 @@ import {
   LayoutDashboard, GitCompareArrows, Vault,
   ArrowDownCircle, ArrowUpCircle, ShieldCheck,
   FileText, ListChecks, ChevronDown, PanelLeftClose,
+  CheckCircle2,
 } from 'lucide-react'
 import { useUiStore } from '@/stores/uiStore'
 import { useUserStore } from '@/stores/userStore'
@@ -11,6 +12,7 @@ import { useState } from 'react'
 
 const navItems = [
   { to: '/dashboard',       icon: LayoutDashboard,    key: 'nav.dashboard' },
+  { to: '/approvals',       icon: CheckCircle2,       key: 'nav.approvals',      badge: '2', badgeColor: 'bg-amber-100 dark:bg-amber-500/15 text-amber-600 dark:text-amber-400' },
   { to: '/reconciliation',  icon: GitCompareArrows,   key: 'nav.reconciliation' },
   { to: '/treasury',        icon: Vault,              key: 'nav.treasury' },
 ]
@@ -62,7 +64,7 @@ export function Sidebar() {
 
       {/* Nav */}
       <nav className="flex-1 px-2 py-3 space-y-0.5">
-        {navItems.map(({ to, icon: Icon, key }) => (
+        {navItems.map(({ to, icon: Icon, key, badge, badgeColor }: { to: string; icon: React.ElementType; key: string; badge?: string; badgeColor?: string }) => (
           <NavLink
             key={to}
             to={to}
@@ -72,6 +74,11 @@ export function Sidebar() {
           >
             <Icon className="w-4 h-4 shrink-0" />
             <span className="nav-label">{t(key)}</span>
+            {badge && (
+              <span className={`nav-badge ml-auto px-1.5 py-0.5 rounded-md text-[10px] font-semibold ${badgeColor}`}>
+                {badge}
+              </span>
+            )}
           </NavLink>
         ))}
 

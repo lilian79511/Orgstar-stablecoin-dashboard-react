@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import {
   GitCompareArrows, Wallet, Landmark, GitMerge, ArrowRight,
+  CheckCircle2, XCircle, Clock,
 } from 'lucide-react'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
@@ -59,6 +60,69 @@ export default function Dashboard() {
             {t('action.reconcile')}
           </Button>
         </div>
+      </div>
+
+      {/* ── Approval alert ─────────────────────────────────────────────────── */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {/* Pending approvals */}
+        <Card className="p-4 flex flex-col border-l-4 border-amber-400">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">Pending Approvals</span>
+            <span className="w-5 h-5 rounded-full bg-amber-500 text-white flex items-center justify-center text-[10px] font-bold">3</span>
+          </div>
+          <div className="space-y-2">
+            {[
+              { ref: 'PAY-20260401-008', party: 'AWS Services',    amount: '3,200', color: 'text-amber-500', icon: Clock },
+              { ref: 'PAY-20260330-009', party: 'Vendor Inc',      amount: '8,750', color: 'text-amber-500', icon: Clock },
+              { ref: 'PAY-20260328-010', party: 'Office Depot',    amount: '450',   color: 'text-red-500',   icon: XCircle },
+            ].map((item) => (
+              <div key={item.ref} onClick={() => navigate('/approvals')}
+                className="flex items-center justify-between cursor-pointer hover:bg-gray-50 dark:hover:bg-white/5 rounded-lg px-1 py-0.5 -mx-1 transition-colors">
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <item.icon className={`w-3 h-3 shrink-0 ${item.color}`} />
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-mono text-gray-400 truncate">{item.ref}</p>
+                    <p className="text-xs font-medium text-gray-700 dark:text-gray-300 truncate">{item.party}</p>
+                  </div>
+                </div>
+                <span className="text-xs font-semibold text-gray-700 dark:text-gray-300 shrink-0 ml-2">{item.amount} <span className="text-gray-400 font-normal text-[10px]">USDC</span></span>
+              </div>
+            ))}
+          </div>
+          <div className="pt-2 mt-1 border-t border-gray-50 dark:border-white/5">
+            <button onClick={() => navigate('/approvals')} className="text-xs text-orange-500 hover:text-orange-600 font-medium flex items-center gap-1 transition-colors">
+              View Approvals <ArrowRight className="w-3 h-3" />
+            </button>
+          </div>
+        </Card>
+
+        {/* Approved this month */}
+        <Card className="p-4 flex flex-col border-l-4 border-emerald-400">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">Approved This Month</span>
+            <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+          </div>
+          <p className="font-grotesk font-semibold text-2xl text-gray-900 dark:text-white">5</p>
+          <p className="text-xs text-gray-400 mt-0.5">Total $14,350 USDC</p>
+          <div className="flex-1" />
+          <button onClick={() => navigate('/approvals')} className="mt-3 text-xs text-orange-500 hover:text-orange-600 font-medium flex items-center gap-1 transition-colors">
+            View history <ArrowRight className="w-3 h-3" />
+          </button>
+        </Card>
+
+        {/* Rejected */}
+        <Card className="p-4 flex flex-col border-l-4 border-red-400">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">Rejected</span>
+            <XCircle className="w-4 h-4 text-red-500" />
+          </div>
+          <p className="font-grotesk font-semibold text-2xl text-gray-900 dark:text-white">1</p>
+          <p className="text-xs text-gray-400 mt-0.5">PAY-20260328-010 · Office Depot</p>
+          <div className="flex-1" />
+          <button onClick={() => navigate('/approvals')} className="mt-3 text-xs text-orange-500 hover:text-orange-600 font-medium flex items-center gap-1 transition-colors">
+            Review <ArrowRight className="w-3 h-3" />
+          </button>
+        </Card>
       </div>
 
       {/* ── Stats row ──────────────────────────────────────────────────────── */}
@@ -154,14 +218,14 @@ export default function Dashboard() {
           ))}
         </div>
 
-        {/* Positive bars */}
+        {/* Positive bars — fixed 72px container, pixel heights */}
         <div className="flex items-end gap-2 px-1" style={{ height: 72 }}>
           {chartMonths.map((m) => (
-            <div key={m.label} className="flex-1">
+            <div key={m.label} className="flex-1 flex items-end" style={{ height: 72 }}>
               {m.inPct > 0 && (
                 <div
                   className="pl-bar-pos w-full"
-                  style={{ height: `${m.inPct}%`, borderRadius: '4px 4px 0 0' }}
+                  style={{ height: Math.round((m.inPct / 100) * 72), borderRadius: '4px 4px 0 0' }}
                 />
               )}
             </div>
@@ -171,14 +235,14 @@ export default function Dashboard() {
         {/* Zero baseline */}
         <div className="mx-1 border-t border-dashed border-gray-200 dark:border-white/10" />
 
-        {/* Negative bars */}
+        {/* Negative bars — fixed 18px container, pixel heights */}
         <div className="flex items-start gap-2 px-1" style={{ height: 18 }}>
           {chartMonths.map((m) => (
-            <div key={m.label} className="flex-1">
+            <div key={m.label} className="flex-1" style={{ height: 18 }}>
               {m.outPct > 0 && (
                 <div
                   className="pl-bar-neg w-full"
-                  style={{ height: `${m.outPct}%`, borderRadius: '0 0 4px 4px' }}
+                  style={{ height: Math.round((m.outPct / 100) * 18), borderRadius: '0 0 4px 4px' }}
                 />
               )}
             </div>

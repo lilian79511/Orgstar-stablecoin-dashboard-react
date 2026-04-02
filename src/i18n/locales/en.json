@@ -1,6 +1,7 @@
 {
   "nav": {
     "dashboard": "Dashboard",
+    "approvals": "Approvals",
     "reconciliation": "Reconciliation",
     "treasury": "Treasury",
     "invoice": "Invoice",

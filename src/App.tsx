@@ -3,6 +3,7 @@ import { AppLayout } from '@/components/layout/AppLayout'
 import Dashboard from '@/pages/Dashboard'
 import Reconciliation from '@/pages/Reconciliation'
 import Treasury from '@/pages/Treasury'
+import Approvals from '@/pages/Approvals'
 import ComingSoon from '@/pages/ComingSoon'
 
 export default function App() {
@@ -12,6 +13,7 @@ export default function App() {
         <Route element={<AppLayout />}>
           <Route index element={<Navigate to="/dashboard" replace />} />
           <Route path="dashboard"      element={<Dashboard />} />
+          <Route path="approvals"      element={<Approvals />} />
           <Route path="reconciliation" element={<Reconciliation />} />
           <Route path="treasury"       element={<Treasury />} />
           <Route path="invoices"       element={<ComingSoon title="Invoice" />} />

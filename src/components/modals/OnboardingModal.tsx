@@ -1,5 +1,5 @@
-import { useState, useRef } from 'react'
-import { X, Upload, CheckCircle2, LayoutDashboard, GitMerge, ChevronRight } from 'lucide-react'
+import { useState } from 'react'
+import { X, CheckCircle2, LayoutDashboard, GitMerge, ChevronRight, FileText, Receipt } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/Button'
 import { useUiStore } from '@/stores/uiStore'
@@ -12,22 +12,45 @@ const ROLE_OPTIONS: { key: RoleKey; label: string }[] = [
   { key: 'auditor',  label: 'Auditor' },
 ]
 
+const CURRENCIES = ['USDC', 'USDT', 'DAI']
+const NETWORKS   = ['ETH', 'POL', 'SOL', 'TRX']
+
+const emptyDoc = () => ({
+  counterparty: '',
+  ref:          '',
+  amount:       '',
+  currency:     'USDC',
+  network:      'ETH',
+  date:         '',
+  dueDate:      '',
+  category:     '',
+  notes:        '',
+})
+
 export function OnboardingModal() {
   const { onboardingOpen, closeOnboarding, showToast } = useUiStore()
   const { profile, setProfile } = useUserStore()
   const navigate = useNavigate()
 
-  const [step, setStep] = useState(1)
+  const [step, setStep]       = useState(1)
   const [name, setName]       = useState(profile.name)
   const [roleKey, setRoleKey] = useState<RoleKey>(profile.roleKey)
   const [company, setCompany] = useState(profile.company)
   const [wallet, setWallet]   = useState('')
-  const [invFile, setInvFile] = useState<File | null>(null)
-  const [billFile, setBillFile] = useState<File | null>(null)
-  const invRef  = useRef<HTMLInputElement>(null)
-  const billRef = useRef<HTMLInputElement>(null)
+  const [invForm,  setInvForm]  = useState(emptyDoc)
+  const [billForm, setBillForm] = useState(emptyDoc)
 
   if (!onboardingOpen) return null
+
+  const inputCls = 'w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-white/[0.03] text-sm text-gray-800 dark:text-gray-200 placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:border-orange-400 dark:focus:border-orange-500/60 transition-colors'
+  const labelCls = 'block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1'
+
+  function setInv(field: string, value: string) {
+    setInvForm((f) => ({ ...f, [field]: value }))
+  }
+  function setBill(field: string, value: string) {
+    setBillForm((f) => ({ ...f, [field]: value }))
+  }
 
   function close() {
     closeOnboarding()
@@ -38,7 +61,6 @@ export function OnboardingModal() {
   function skip() { next() }
 
   function finish(destination: 'dashboard' | 'reconcile') {
-    // Save profile
     const initials = name.split(/\s+/).map((w) => w[0]).join('').slice(0, 2).toUpperCase()
     setProfile({ name, roleKey, company, initials })
     showToast('Welcome to Orgstar! 🎉', 'success')
@@ -61,8 +83,8 @@ export function OnboardingModal() {
             <h3 className="font-grotesk font-semibold text-base text-gray-900 dark:text-white mt-0.5">
               {step === 1 && 'Welcome to Orgstar'}
               {step === 2 && 'Track Your Wallet'}
-              {step === 3 && 'Upload Invoice'}
-              {step === 4 && 'Upload Bill'}
+              {step === 3 && 'Add Invoice'}
+              {step === 4 && 'Add Bill'}
               {step === 5 && "You're all set!"}
             </h3>
           </div>
@@ -83,7 +105,7 @@ export function OnboardingModal() {
         </div>
 
         {/* Step content */}
-        <div className="p-5">
+        <div className="p-5 max-h-[65vh] overflow-y-auto">
 
           {/* Step 1: Profile */}
           {step === 1 && (
@@ -91,34 +113,32 @@ export function OnboardingModal() {
               <p className="text-sm text-gray-500 dark:text-gray-400">Tell us a bit about yourself to personalise your experience.</p>
               <div className="space-y-3">
                 <div>
-                  <label className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">
-                    Your Name <span className="text-red-400">*</span>
-                  </label>
+                  <label className={labelCls}>Your Name <span className="text-red-400">*</span></label>
                   <input
                     type="text"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="mt-1 w-full px-3 py-2.5 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-white/[0.03] text-sm text-gray-800 dark:text-gray-200 placeholder-gray-400 focus:outline-none focus:border-orange-400 dark:focus:border-orange-500/60 transition-colors"
+                    className={inputCls}
                     placeholder="e.g. Lillian Chen"
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Your Role</label>
+                  <label className={labelCls}>Your Role</label>
                   <select
                     value={roleKey}
                     onChange={(e) => setRoleKey(e.target.value as RoleKey)}
-                    className="mt-1 w-full px-3 py-2.5 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-white/[0.03] text-sm text-gray-800 dark:text-gray-200 focus:outline-none focus:border-orange-400 dark:focus:border-orange-500/60 transition-colors"
+                    className={inputCls}
                   >
                     {ROLE_OPTIONS.map((r) => <option key={r.key} value={r.key}>{r.label}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Company / Organisation</label>
+                  <label className={labelCls}>Company / Organisation</label>
                   <input
                     type="text"
                     value={company}
                     onChange={(e) => setCompany(e.target.value)}
-                    className="mt-1 w-full px-3 py-2.5 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-white/[0.03] text-sm text-gray-800 dark:text-gray-200 placeholder-gray-400 focus:outline-none focus:border-orange-400 dark:focus:border-orange-500/60 transition-colors"
+                    className={inputCls}
                     placeholder="e.g. Nexora Technology Co., Ltd."
                   />
                 </div>
@@ -131,23 +151,20 @@ export function OnboardingModal() {
             <div className="space-y-4">
               <p className="text-sm text-gray-500 dark:text-gray-400">Connect a wallet address to track on-chain payments and reconcile transactions.</p>
               <div>
-                <label className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Wallet Address</label>
+                <label className={labelCls}>Wallet Address</label>
                 <input
                   type="text"
                   value={wallet}
                   onChange={(e) => setWallet(e.target.value)}
                   placeholder="0x… or TQ…"
-                  className="mt-1 w-full px-3 py-2.5 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-white/[0.03] text-sm text-gray-800 dark:text-gray-200 placeholder-gray-400 font-mono focus:outline-none focus:border-orange-400 dark:focus:border-orange-500/60 transition-colors"
+                  className={`${inputCls} font-mono`}
                 />
               </div>
               <div className="grid grid-cols-2 gap-2">
                 {['Ethereum', 'Polygon', 'Solana', 'Tron'].map((net, i) => (
                   <button
                     key={net}
-                    className={`flex items-center gap-2 p-2.5 rounded-lg border text-xs font-medium transition-colors
-                      ${['bg-blue-400','bg-violet-400','bg-emerald-400','bg-red-400'][i]}
-                      border-gray-100 dark:border-white/[0.08] text-gray-700 dark:text-gray-300
-                      hover:border-orange-300 dark:hover:border-orange-500/40 bg-white dark:bg-white/[0.03]`}
+                    className="flex items-center gap-2 p-2.5 rounded-lg border text-xs font-medium transition-colors border-gray-100 dark:border-white/[0.08] text-gray-700 dark:text-gray-300 hover:border-orange-300 dark:hover:border-orange-500/40 bg-white dark:bg-white/[0.03]"
                   >
                     <span className={`w-2 h-2 rounded-full ${['bg-blue-400','bg-violet-400','bg-emerald-400','bg-red-400'][i]}`} />
                     {net}
@@ -157,55 +174,127 @@ export function OnboardingModal() {
             </div>
           )}
 
-          {/* Step 3: Invoice */}
+          {/* Step 3: Invoice form */}
           {step === 3 && (
-            <div className="space-y-4">
-              <p className="text-sm text-gray-500 dark:text-gray-400">Upload a sample invoice to see how Orgstar matches it to on-chain payments.</p>
-              <div
-                onClick={() => invRef.current?.click()}
-                className="border-2 border-dashed rounded-xl p-8 flex flex-col items-center gap-3 cursor-pointer transition-colors border-gray-200 dark:border-white/10 hover:border-orange-300 dark:hover:border-orange-500/40 hover:bg-orange-50/30 dark:hover:bg-orange-500/5"
-              >
-                <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-white/8 flex items-center justify-center">
-                  <Upload className="w-5 h-5 text-gray-400" />
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 mb-1">
+                <div className="w-6 h-6 rounded-md bg-orange-50 dark:bg-orange-500/10 flex items-center justify-center">
+                  <FileText className="w-3.5 h-3.5 text-orange-500" />
                 </div>
-                <div className="text-center">
-                  <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Drop invoice or <span className="text-orange-500">browse</span></p>
-                  <p className="text-[11px] text-gray-400 mt-0.5">PDF, PNG, JPG, CSV</p>
-                </div>
-                <input ref={invRef} type="file" className="hidden" onChange={(e) => setInvFile(e.target.files?.[0] ?? null)} />
+                <p className="text-sm text-gray-500 dark:text-gray-400">Enter your first invoice to see how Orgstar matches it to on-chain payments.</p>
               </div>
-              {invFile && (
-                <div className="flex items-center gap-2 p-3 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                  <p className="text-xs font-medium text-gray-700 dark:text-gray-300 truncate">{invFile.name}</p>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className={labelCls}>Customer *</label>
+                  <input value={invForm.counterparty} onChange={(e) => setInv('counterparty', e.target.value)}
+                    placeholder="e.g. Acme Corp" className={inputCls} />
                 </div>
-              )}
+                <div>
+                  <label className={labelCls}>Reference No.</label>
+                  <input value={invForm.ref} onChange={(e) => setInv('ref', e.target.value)}
+                    placeholder="INV-2026…" className={inputCls} />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-3">
+                <div className="col-span-1">
+                  <label className={labelCls}>Amount *</label>
+                  <input value={invForm.amount} onChange={(e) => setInv('amount', e.target.value)}
+                    placeholder="0.00" type="number" min="0" className={inputCls} />
+                </div>
+                <div>
+                  <label className={labelCls}>Currency</label>
+                  <select value={invForm.currency} onChange={(e) => setInv('currency', e.target.value)} className={inputCls}>
+                    {CURRENCIES.map((c) => <option key={c}>{c}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className={labelCls}>Network</label>
+                  <select value={invForm.network} onChange={(e) => setInv('network', e.target.value)} className={inputCls}>
+                    {NETWORKS.map((n) => <option key={n}>{n}</option>)}
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className={labelCls}>Invoice Date</label>
+                  <input value={invForm.date} onChange={(e) => setInv('date', e.target.value)} type="date" className={inputCls} />
+                </div>
+                <div>
+                  <label className={labelCls}>Due Date</label>
+                  <input value={invForm.dueDate} onChange={(e) => setInv('dueDate', e.target.value)} type="date" className={inputCls} />
+                </div>
+              </div>
+
+              <div>
+                <label className={labelCls}>Description / Services</label>
+                <input value={invForm.category} onChange={(e) => setInv('category', e.target.value)}
+                  placeholder="e.g. Consulting services for Q1 2026" className={inputCls} />
+              </div>
             </div>
           )}
 
-          {/* Step 4: Bill */}
+          {/* Step 4: Bill form */}
           {step === 4 && (
-            <div className="space-y-4">
-              <p className="text-sm text-gray-500 dark:text-gray-400">Upload a bill or supplier invoice to track Accounts Payable.</p>
-              <div
-                onClick={() => billRef.current?.click()}
-                className="border-2 border-dashed rounded-xl p-8 flex flex-col items-center gap-3 cursor-pointer transition-colors border-gray-200 dark:border-white/10 hover:border-violet-300 dark:hover:border-violet-500/40 hover:bg-violet-50/30 dark:hover:bg-violet-500/5"
-              >
-                <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-white/8 flex items-center justify-center">
-                  <Upload className="w-5 h-5 text-gray-400" />
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 mb-1">
+                <div className="w-6 h-6 rounded-md bg-violet-50 dark:bg-violet-500/10 flex items-center justify-center">
+                  <Receipt className="w-3.5 h-3.5 text-violet-500" />
                 </div>
-                <div className="text-center">
-                  <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Drop bill or <span className="text-violet-500">browse</span></p>
-                  <p className="text-[11px] text-gray-400 mt-0.5">PDF, PNG, JPG, CSV</p>
-                </div>
-                <input ref={billRef} type="file" className="hidden" onChange={(e) => setBillFile(e.target.files?.[0] ?? null)} />
+                <p className="text-sm text-gray-500 dark:text-gray-400">Add a supplier bill to track Accounts Payable.</p>
               </div>
-              {billFile && (
-                <div className="flex items-center gap-2 p-3 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                  <p className="text-xs font-medium text-gray-700 dark:text-gray-300 truncate">{billFile.name}</p>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className={labelCls}>Vendor *</label>
+                  <input value={billForm.counterparty} onChange={(e) => setBill('counterparty', e.target.value)}
+                    placeholder="e.g. AWS Services" className={inputCls} />
                 </div>
-              )}
+                <div>
+                  <label className={labelCls}>Reference No.</label>
+                  <input value={billForm.ref} onChange={(e) => setBill('ref', e.target.value)}
+                    placeholder="PAY-2026…" className={inputCls} />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-3">
+                <div className="col-span-1">
+                  <label className={labelCls}>Amount *</label>
+                  <input value={billForm.amount} onChange={(e) => setBill('amount', e.target.value)}
+                    placeholder="0.00" type="number" min="0" className={inputCls} />
+                </div>
+                <div>
+                  <label className={labelCls}>Currency</label>
+                  <select value={billForm.currency} onChange={(e) => setBill('currency', e.target.value)} className={inputCls}>
+                    {CURRENCIES.map((c) => <option key={c}>{c}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className={labelCls}>Network</label>
+                  <select value={billForm.network} onChange={(e) => setBill('network', e.target.value)} className={inputCls}>
+                    {NETWORKS.map((n) => <option key={n}>{n}</option>)}
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className={labelCls}>Bill Date</label>
+                  <input value={billForm.date} onChange={(e) => setBill('date', e.target.value)} type="date" className={inputCls} />
+                </div>
+                <div>
+                  <label className={labelCls}>Payment Due</label>
+                  <input value={billForm.dueDate} onChange={(e) => setBill('dueDate', e.target.value)} type="date" className={inputCls} />
+                </div>
+              </div>
+
+              <div>
+                <label className={labelCls}>Category</label>
+                <input value={billForm.category} onChange={(e) => setBill('category', e.target.value)}
+                  placeholder="e.g. Cloud Infrastructure" className={inputCls} />
+              </div>
             </div>
           )}
 
@@ -250,9 +339,12 @@ export function OnboardingModal() {
             <Button
               size="sm"
               disabled={step === 1 && !name.trim()}
-              onClick={step === 3 && invFile ? next : step === 4 && billFile ? next : next}
+              onClick={next}
             >
-              {step === 3 && invFile ? 'Upload & Continue' : step === 4 && billFile ? 'Upload & Continue' : 'Continue'}
+              {(step === 3 && invForm.counterparty.trim() && invForm.amount.trim()) ||
+               (step === 4 && billForm.counterparty.trim() && billForm.amount.trim())
+                ? 'Save & Continue'
+                : 'Continue'}
               <ChevronRight className="w-3.5 h-3.5" />
             </Button>
           </div>

@@ -1,5 +1,5 @@
-import { useState, useRef } from 'react'
-import { X, Upload, FileText, CheckCircle2 } from 'lucide-react'
+import { useState } from 'react'
+import { X, Upload, FileText } from 'lucide-react'
 import { Modal } from '@/components/ui/Modal'
 import { Button } from '@/components/ui/Button'
 import { useUiStore } from '@/stores/uiStore'
@@ -8,103 +8,142 @@ interface Props {
   type: 'invoice' | 'bill'
 }
 
+const CURRENCIES = ['USDC', 'USDT', 'DAI']
+const NETWORKS   = ['ETH', 'POL', 'SOL', 'TRX']
+
 export function UploadModal({ type }: Props) {
   const { activeModal, closeModal, showToast } = useUiStore()
   const isOpen = activeModal === (type === 'invoice' ? 'upload-invoice' : 'upload-bill')
 
-  const [file, setFile] = useState<File | null>(null)
-  const [dragging, setDragging] = useState(false)
-  const inputRef = useRef<HTMLInputElement>(null)
+  const isInvoice = type === 'invoice'
+  const accent = isInvoice ? 'orange' : 'violet'
 
-  const title = type === 'invoice' ? 'Upload Invoice' : 'Upload Bill'
-  const accent = type === 'invoice' ? 'orange' : 'violet'
+  // Form state
+  const [form, setForm] = useState({
+    counterparty: '',
+    ref:          '',
+    amount:       '',
+    currency:     'USDC',
+    network:      'ETH',
+    date:         '',
+    dueDate:      '',
+    category:     '',
+    notes:        '',
+  })
+
+  function set(field: keyof typeof form, value: string) {
+    setForm((f) => ({ ...f, [field]: value }))
+  }
 
   function onClose() {
     closeModal()
-    setFile(null)
-  }
-
-  function handleFile(f: File) {
-    setFile(f)
-  }
-
-  function handleDrop(e: React.DragEvent) {
-    e.preventDefault()
-    setDragging(false)
-    const f = e.dataTransfer.files[0]
-    if (f) handleFile(f)
+    setForm({ counterparty: '', ref: '', amount: '', currency: 'USDC', network: 'ETH', date: '', dueDate: '', category: '', notes: '' })
   }
 
   function handleSubmit() {
-    showToast(`${file?.name ?? 'File'} uploaded successfully`, 'success')
+    if (!form.counterparty || !form.amount) return
+    showToast(
+      `${isInvoice ? 'Invoice' : 'Bill'} ${form.ref || 'created'} for ${form.counterparty}`,
+      'success'
+    )
     onClose()
   }
 
+  const isValid = form.counterparty.trim() && form.amount.trim()
+
+  const inputCls = 'w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-white/[0.03] text-sm text-gray-800 dark:text-gray-200 placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:border-orange-400 dark:focus:border-orange-500/60 transition-colors'
+  const labelCls = 'block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1'
+
   return (
-    <Modal isOpen={isOpen} onClose={onClose} maxWidth="max-w-md">
+    <Modal isOpen={isOpen} onClose={onClose} maxWidth="max-w-lg">
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-white/[0.06]">
         <div className="flex items-center gap-2.5">
-          <div className={`w-7 h-7 rounded-lg flex items-center justify-center
-            ${accent === 'orange' ? 'bg-orange-50 dark:bg-orange-500/10' : 'bg-violet-50 dark:bg-violet-500/10'}`}>
-            <Upload className={`w-3.5 h-3.5 ${accent === 'orange' ? 'text-orange-500' : 'text-violet-500'}`} />
+          <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${accent === 'orange' ? 'bg-orange-50 dark:bg-orange-500/10' : 'bg-violet-50 dark:bg-violet-500/10'}`}>
+            {isInvoice ? <FileText className={`w-3.5 h-3.5 text-orange-500`} /> : <Upload className="w-3.5 h-3.5 text-violet-500" />}
           </div>
-          <h3 className="font-grotesk font-semibold text-sm text-gray-900 dark:text-white">{title}</h3>
+          <h3 className="font-grotesk font-semibold text-sm text-gray-900 dark:text-white">
+            {isInvoice ? 'New Invoice' : 'New Bill'}
+          </h3>
         </div>
         <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors">
           <X className="w-4 h-4" />
         </button>
       </div>
 
-      {/* Body */}
-      <div className="p-5 space-y-4">
-        {/* Drop zone */}
-        <div
-          onClick={() => inputRef.current?.click()}
-          onDragOver={(e) => { e.preventDefault(); setDragging(true) }}
-          onDragLeave={() => setDragging(false)}
-          onDrop={handleDrop}
-          className={`border-2 border-dashed rounded-xl p-8 flex flex-col items-center gap-3 cursor-pointer transition-colors
-            ${dragging
-              ? 'border-orange-400 bg-orange-50/40 dark:bg-orange-500/5'
-              : 'border-gray-200 dark:border-white/10 hover:border-orange-300 dark:hover:border-orange-500/40 hover:bg-gray-50/50 dark:hover:bg-white/[0.02]'
-            }`}
-        >
-          <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-white/8 flex items-center justify-center">
-            <Upload className="w-5 h-5 text-gray-400 dark:text-gray-500" />
+      {/* Form */}
+      <div className="p-5 space-y-4 max-h-[70vh] overflow-y-auto">
+
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className={labelCls}>{isInvoice ? 'Customer *' : 'Vendor *'}</label>
+            <input value={form.counterparty} onChange={(e) => set('counterparty', e.target.value)}
+              placeholder={isInvoice ? 'e.g. Acme Corp' : 'e.g. AWS Services'}
+              className={inputCls} />
           </div>
-          <div className="text-center">
-            <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Drop file here or <span className="text-orange-500">browse</span></p>
-            <p className="text-[11px] text-gray-400 mt-0.5">PDF, PNG, JPG, CSV up to 20 MB</p>
+          <div>
+            <label className={labelCls}>Reference No.</label>
+            <input value={form.ref} onChange={(e) => set('ref', e.target.value)}
+              placeholder={isInvoice ? 'INV-2026…' : 'PAY-2026…'}
+              className={inputCls} />
           </div>
-          <input
-            ref={inputRef}
-            type="file"
-            accept=".pdf,.png,.jpg,.jpeg,.csv"
-            className="hidden"
-            onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f) }}
-          />
         </div>
 
-        {/* Selected file */}
-        {file && (
-          <div className="flex items-center gap-3 p-3 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20">
-            <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-medium text-gray-800 dark:text-gray-200 truncate">{file.name}</p>
-              <p className="text-[10px] text-gray-400">{(file.size / 1024).toFixed(0)} KB</p>
-            </div>
-            <FileText className="w-4 h-4 text-gray-400 shrink-0" />
+        <div className="grid grid-cols-3 gap-3">
+          <div className="col-span-1">
+            <label className={labelCls}>Amount *</label>
+            <input value={form.amount} onChange={(e) => set('amount', e.target.value)}
+              placeholder="0.00" type="number" min="0"
+              className={inputCls} />
           </div>
-        )}
+          <div>
+            <label className={labelCls}>Currency</label>
+            <select value={form.currency} onChange={(e) => set('currency', e.target.value)} className={inputCls}>
+              {CURRENCIES.map((c) => <option key={c}>{c}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className={labelCls}>Network</label>
+            <select value={form.network} onChange={(e) => set('network', e.target.value)} className={inputCls}>
+              {NETWORKS.map((n) => <option key={n}>{n}</option>)}
+            </select>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className={labelCls}>{isInvoice ? 'Invoice Date' : 'Bill Date'}</label>
+            <input value={form.date} onChange={(e) => set('date', e.target.value)}
+              type="date" className={inputCls} />
+          </div>
+          <div>
+            <label className={labelCls}>{isInvoice ? 'Due Date' : 'Payment Due'}</label>
+            <input value={form.dueDate} onChange={(e) => set('dueDate', e.target.value)}
+              type="date" className={inputCls} />
+          </div>
+        </div>
+
+        <div>
+          <label className={labelCls}>{isInvoice ? 'Description / Services' : 'Category'}</label>
+          <input value={form.category} onChange={(e) => set('category', e.target.value)}
+            placeholder={isInvoice ? 'e.g. Consulting services for Q1 2026' : 'e.g. Cloud Infrastructure'}
+            className={inputCls} />
+        </div>
+
+        <div>
+          <label className={labelCls}>Notes (optional)</label>
+          <textarea value={form.notes} onChange={(e) => set('notes', e.target.value)}
+            rows={2} placeholder="Any additional notes…"
+            className={`${inputCls} resize-none`} />
+        </div>
       </div>
 
       {/* Footer */}
       <div className="flex items-center justify-end gap-2 px-5 py-4 border-t border-gray-100 dark:border-white/[0.06]">
         <Button variant="secondary" size="sm" onClick={onClose}>Cancel</Button>
-        <Button size="sm" disabled={!file} onClick={handleSubmit}>
-          <Upload className="w-3.5 h-3.5" />
-          Upload & Continue
+        <Button size="sm" disabled={!isValid} onClick={handleSubmit}>
+          {isInvoice ? <FileText className="w-3.5 h-3.5" /> : <Upload className="w-3.5 h-3.5" />}
+          {isInvoice ? 'Create Invoice' : 'Create Bill'}
         </Button>
       </div>
     </Modal>

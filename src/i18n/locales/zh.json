@@ -1,6 +1,7 @@
 {
   "nav": {
     "dashboard": "儀表板",
+    "approvals": "付款審批",
     "reconciliation": "對帳管理",
     "treasury": "資金管理",
     "invoice": "發票管理",
