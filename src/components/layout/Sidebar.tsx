@@ -4,11 +4,18 @@ import {
   LayoutDashboard, GitCompareArrows, Vault,
   ArrowDownCircle, ShieldCheck,
   FileText, ListChecks, ChevronDown, PanelLeftClose,
-  CheckCircle2,
+  CheckCircle2, Users,
 } from 'lucide-react'
 import { useUiStore } from '@/stores/uiStore'
-import { useUserStore } from '@/stores/userStore'
+import { useUserStore, type RoleKey } from '@/stores/userStore'
 import { useState } from 'react'
+
+const DEMO_PERSONAS = [
+  { id: 'finance'  as RoleKey, name: '陳琳達', role: 'Finance Specialist',     badge: 'Full Access',   badgeCls: 'bg-orange-100 dark:bg-orange-500/20 text-orange-700 dark:text-orange-400',  color: 'bg-orange-500',  initials: 'LC' },
+  { id: 'manager'  as RoleKey, name: '王大明', role: 'Department Manager',      badge: 'Approver',      badgeCls: 'bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400',          color: 'bg-blue-500',    initials: 'WM' },
+  { id: 'cfo'      as RoleKey, name: '李財長', role: 'Chief Financial Officer', badge: 'Dual Approver', badgeCls: 'bg-violet-100 dark:bg-violet-500/20 text-violet-700 dark:text-violet-400',  color: 'bg-violet-500',  initials: 'LC' },
+  { id: 'auditor'  as RoleKey, name: '張稽核', role: 'Auditor',                 badge: 'Read-only',     badgeCls: 'bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-400',              color: 'bg-emerald-500', initials: 'ZJ' },
+]
 
 const navItems = [
   { to: '/dashboard',       icon: LayoutDashboard,    key: 'nav.dashboard' },
@@ -26,10 +33,23 @@ const comingSoonItems = [
 
 export function Sidebar() {
   const { t } = useTranslation()
-  const { sidebarCollapsed, toggleSidebar } = useUiStore()
-  const { profile, role } = useUserStore()
+  const { sidebarCollapsed, toggleSidebar, showToast } = useUiStore()
+  const { profile, role, setProfile } = useUserStore()
   const [csOpen, setCsOpen] = useState(false)
+  const [switchRoleOpen, setSwitchRoleOpen] = useState(false)
   useLocation() // keep router context active
+
+  function handleSwitchPersona(persona: typeof DEMO_PERSONAS[number]) {
+    setProfile({
+      name: persona.name,
+      roleKey: persona.id,
+      company: profile.company,
+      initials: persona.initials,
+      avatarColor: persona.color,
+    })
+    showToast(`Switched to ${persona.name} (${persona.role})`, 'success')
+    setSwitchRoleOpen(false)
+  }
 
   const navBase = 'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors nav-item'
   const navInactive = 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white'
@@ -114,10 +134,50 @@ export function Sidebar() {
       </nav>
 
       {/* User card */}
-      <div className="px-2 pb-3 pt-2 border-t border-gray-100 dark:border-white/5">
+      <div className="px-2 pb-3 pt-2 border-t border-gray-100 dark:border-white/5 relative">
+        {/* Switch Role panel */}
+        {switchRoleOpen && !sidebarCollapsed && (
+          <div className="absolute bottom-full left-2 right-2 mb-2 bg-white dark:bg-[#1a1d27] rounded-xl border border-gray-100 dark:border-white/[0.08] shadow-lg p-3 z-50">
+            <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-2.5">Switch Role — Demo</p>
+            <div className="space-y-1.5">
+              {DEMO_PERSONAS.map((persona) => {
+                const isActive = profile.roleKey === persona.id
+                return (
+                  <button
+                    key={persona.id}
+                    onClick={() => handleSwitchPersona(persona)}
+                    className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg transition-colors hover:bg-gray-50 dark:hover:bg-white/[0.04] ${isActive ? 'ring-1 ring-orange-400 dark:ring-orange-500/60 bg-orange-50/50 dark:bg-orange-500/[0.06]' : ''}`}
+                  >
+                    <div className={`w-7 h-7 rounded-full ${persona.color} flex items-center justify-center shrink-0 ${isActive ? 'ring-2 ring-orange-400 ring-offset-1 dark:ring-offset-[#1a1d27]' : ''}`}>
+                      <span className="text-[11px] font-bold text-white">{persona.initials}</span>
+                    </div>
+                    <div className="flex-1 text-left min-w-0">
+                      <p className="text-xs font-semibold text-gray-800 dark:text-gray-200 truncate">{persona.name}</p>
+                      <p className="text-[10px] text-gray-400 truncate">{persona.role}</p>
+                    </div>
+                    <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-md shrink-0 ${persona.badgeCls}`}>{persona.badge}</span>
+                  </button>
+                )
+              })}
+            </div>
+            <p className="text-[10px] text-gray-400 text-center mt-2.5">For demo purposes only</p>
+          </div>
+        )}
+
+        {/* Switch Role button */}
+        {!sidebarCollapsed && (
+          <button
+            onClick={() => setSwitchRoleOpen((o) => !o)}
+            className="w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-[11px] font-medium text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors mb-1"
+          >
+            <Users className="w-3.5 h-3.5 shrink-0" />
+            Switch Role
+          </button>
+        )}
+
         <div className="user-btn w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/5 transition-colors cursor-pointer">
-          <div className={`w-7 h-7 rounded-full ${role.color} flex items-center justify-center shrink-0`}>
-            <span className={`text-[11px] font-bold ${role.textColor}`}>{profile.initials}</span>
+          <div className={`w-7 h-7 rounded-full ${profile.avatarColor ?? role.color} flex items-center justify-center shrink-0`}>
+            <span className={`text-[11px] font-bold ${profile.avatarColor ? 'text-white' : role.textColor}`}>{profile.initials}</span>
           </div>
           <div className="sidebar-user-text text-left min-w-0">
             <p className="text-xs font-semibold text-gray-800 dark:text-gray-200 truncate">{profile.name}</p>

@@ -46,6 +46,7 @@ interface UserProfile {
   roleKey: RoleKey
   company: string
   initials: string
+  avatarColor?: string
 }
 
 interface UserStore {
@@ -59,6 +60,7 @@ const defaultProfile: UserProfile = {
   roleKey: 'finance',
   company: 'Nexora Technology Co., Ltd.',
   initials: 'LC',
+  avatarColor: undefined,
 }
 
 export const useUserStore = create<UserStore>((set) => ({

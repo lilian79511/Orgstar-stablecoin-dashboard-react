@@ -2,9 +2,11 @@ import { useState } from 'react'
 import {
   CheckCircle2, XCircle, Clock, AlertTriangle, Copy,
   PenLine, Plus, Calendar, ChevronUp, ChevronDown as ChevronDownIcon, X,
+  Users, Paperclip, Zap, Send,
 } from 'lucide-react'
 import { Drawer } from '@/components/ui/Drawer'
 import { useUiStore } from '@/stores/uiStore'
+import { useUserStore } from '@/stores/userStore'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 type PayStatus = 'pending-manager' | 'awaiting-sig' | 'rejected' | 'paid'
@@ -449,11 +451,17 @@ const CURRENCY_NETWORK_OPTIONS = [
   { value: 'USDC·ETH', label: 'USDC · Ethereum' },
   { value: 'USDC·POL', label: 'USDC · Polygon' },
   { value: 'USDC·SOL', label: 'USDC · Solana' },
-  { value: 'USDT·ETH', label: 'USDT · Ethereum' },
   { value: 'USDT·TRX', label: 'USDT · Tron' },
 ]
 
 const inputCls = 'px-3 py-2 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-white/[0.03] text-sm text-gray-800 dark:text-gray-200 placeholder-gray-400 focus:outline-none focus:border-orange-400 transition-colors'
+
+// ── Policy tier helper ────────────────────────────────────────────────────────
+function getPolicyTier(amount: number): 1 | 2 | 3 {
+  if (amount < 1000)  return 1
+  if (amount <= 50000) return 2
+  return 3
+}
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 export default function Approvals() {
@@ -474,9 +482,13 @@ export default function Approvals() {
   const [nbDeadline, setNbDeadline] = useState('')
 
   const { showToast } = useUiStore()
+  const { profile } = useUserStore()
 
   const awaitingCount = PAYMENTS.filter((p) => p.status === 'awaiting-sig').length
   const pendingCount  = PAYMENTS.filter((p) => p.status === 'pending-manager').length
+
+  const parsedAmount = parseFloat(nbAmount) || 0
+  const policyTier = getPolicyTier(parsedAmount)
 
   function toggleSort(col: SortCol) {
     if (sortCol === col) {
@@ -512,22 +524,59 @@ export default function Approvals() {
 
   const hasFilter = payeeFilter !== '' || statusFilter !== ''
 
+  function roleFilter(p: Payment, currentTab: TabKey): boolean {
+    if (currentTab === 'awaiting-sig') {
+      const awaitingStep = p.chain.find((s) => s.status === 'awaiting')
+      if (profile.roleKey === 'manager') return awaitingStep?.role === 'Manager'
+      if (profile.roleKey === 'cfo')     return awaitingStep?.role === 'CFO'
+      if (profile.roleKey === 'finance') return false
+      // auditor sees all
+      return true
+    }
+    return true
+  }
+
   const visible = sortPayments(
     PAYMENTS
       .filter((p) => tabFilter(p, tab))
+      .filter((p) => tab === 'awaiting-sig' ? roleFilter(p, tab) : true)
       .filter((p) => payeeFilter === '' || p.payee.toLowerCase().includes(payeeFilter.toLowerCase()))
       .filter((p) => statusFilter === '' || p.status === statusFilter)
   )
 
   function getRowAction(p: Payment) {
-    if (p.status === 'awaiting-sig') return (
+    // Auditor: always view-only
+    if (profile.roleKey === 'auditor') return (
       <button
         onClick={(e) => { e.stopPropagation(); setSelected(p) }}
-        className="px-3 py-1 rounded-lg bg-orange-500 hover:bg-orange-600 text-white text-xs font-semibold transition-colors"
+        className="text-xs text-orange-500 hover:text-orange-600 font-medium transition-colors"
       >
-        Sign
+        View
       </button>
     )
+
+    if (p.status === 'awaiting-sig') {
+      const awaitingStep = p.chain.find((s) => s.status === 'awaiting')
+      const canSign =
+        (profile.roleKey === 'manager' && awaitingStep?.role === 'Manager') ||
+        (profile.roleKey === 'cfo' && awaitingStep?.role === 'CFO')
+      if (canSign) return (
+        <button
+          onClick={(e) => { e.stopPropagation(); setSelected(p) }}
+          className="px-3 py-1 rounded-lg bg-orange-500 hover:bg-orange-600 text-white text-xs font-semibold transition-colors"
+        >
+          Sign
+        </button>
+      )
+      return (
+        <button
+          onClick={(e) => { e.stopPropagation(); setSelected(p) }}
+          className="text-xs text-orange-500 hover:text-orange-600 font-medium transition-colors"
+        >
+          View
+        </button>
+      )
+    }
     if (p.status === 'paid') return (
       <button
         onClick={(e) => { e.stopPropagation(); setSelected(p) }}
@@ -547,7 +596,11 @@ export default function Approvals() {
   }
 
   function handleNewBillSubmit() {
-    showToast('Payment request submitted for approval', 'success')
+    if (policyTier === 1) {
+      showToast('Payment submitted — will execute automatically', 'success')
+    } else {
+      showToast('Payment request submitted for approval', 'success')
+    }
     setNewBillOpen(false)
     setNbPayee(''); setNbWallet(''); setNbAmount(''); setNbCN('USDC·ETH'); setNbPurpose(''); setNbDeadline('')
   }
@@ -751,6 +804,61 @@ export default function Approvals() {
                 <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Payment Deadline</label>
                 <input type="date" value={nbDeadline} onChange={(e) => setNbDeadline(e.target.value)} className={`w-full ${inputCls}`} />
               </div>
+
+              {/* Policy Engine Preview */}
+              <div className="rounded-lg border border-gray-100 dark:border-white/[0.08] bg-gray-50/60 dark:bg-white/[0.03] p-3">
+                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-2">Policy Engine Preview</p>
+                <div className="flex items-center gap-2 flex-wrap mb-1.5">
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400">
+                    <CheckCircle2 className="w-3 h-3" /> KYT Pass
+                  </span>
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400">
+                    <CheckCircle2 className="w-3 h-3" /> Liquidity OK
+                  </span>
+                  {policyTier === 1 && (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400">
+                      <CheckCircle2 className="w-3 h-3" /> DoA: Auto Execute
+                    </span>
+                  )}
+                  {policyTier === 2 && (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400">
+                      <Users className="w-3 h-3" /> DoA: Manager Approval
+                    </span>
+                  )}
+                  {policyTier === 3 && (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-orange-50 dark:bg-orange-500/10 text-orange-700 dark:text-orange-400">
+                      <Users className="w-3 h-3" /> DoA: Manager + CFO
+                    </span>
+                  )}
+                </div>
+                <p className="text-[11px] text-gray-400">
+                  {policyTier === 1 && 'Amount < $1,000 — no approval required, will execute immediately.'}
+                  {policyTier === 2 && 'Amount $1k–$50k — requires one-level manager approval before execution.'}
+                  {policyTier === 3 && 'Amount > $50,000 — requires dual approval from Manager and CFO.'}
+                </p>
+              </div>
+
+              {/* Attach Documents */}
+              <div>
+                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1.5">
+                  Attach Documents <span className="normal-case font-normal text-gray-400">(optional)</span>
+                </p>
+                <div className="border-2 border-dashed border-gray-200 dark:border-white/10 rounded-lg p-4 flex flex-col items-center gap-1.5 text-center cursor-pointer hover:border-orange-300 dark:hover:border-orange-500/40 transition-colors">
+                  <Paperclip className="w-4 h-4 text-gray-300 dark:text-gray-600" />
+                  <p className="text-xs text-gray-400">Attach invoice, contract, PO, receipt</p>
+                </div>
+              </div>
+
+              {/* Network fee — only for tier 1 */}
+              {policyTier === 1 && (
+                <div className="flex items-start gap-2 p-2.5 rounded-lg bg-blue-50 dark:bg-blue-500/[0.07] border border-blue-100 dark:border-blue-500/20">
+                  <Zap className="w-3.5 h-3.5 text-blue-500 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-[11px] font-semibold text-blue-700 dark:text-blue-400">Estimated network fee</p>
+                    <p className="text-[11px] text-blue-600/70 dark:text-blue-400/70 mt-0.5">≈ $0.50 USDC · charged from the sending wallet · actual fee may vary at time of broadcast</p>
+                  </div>
+                </div>
+              )}
             </div>
             <div className="flex items-center justify-end gap-2 px-5 pb-5 border-t border-gray-100 dark:border-white/[0.06] pt-4">
               <button
@@ -762,9 +870,10 @@ export default function Approvals() {
               <button
                 onClick={handleNewBillSubmit}
                 disabled={!nbPayee.trim() || !nbWallet.trim() || !nbAmount.trim()}
-                className="px-4 py-2 rounded-lg bg-orange-500 hover:bg-orange-600 disabled:opacity-50 text-white text-sm font-semibold transition-colors"
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-orange-500 hover:bg-orange-600 disabled:opacity-50 text-white text-sm font-semibold transition-colors"
               >
-                Submit for Approval
+                <Send className="w-3.5 h-3.5" />
+                {policyTier === 1 ? 'Submit Payment' : 'Submit for Approval'}
               </button>
             </div>
           </div>

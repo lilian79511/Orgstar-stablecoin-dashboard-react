@@ -16,7 +16,6 @@ const CURRENCY_NETWORK_OPTIONS = [
   { value: 'USDC·ETH', label: 'USDC · Ethereum' },
   { value: 'USDC·POL', label: 'USDC · Polygon' },
   { value: 'USDC·SOL', label: 'USDC · Solana' },
-  { value: 'USDT·ETH', label: 'USDT · Ethereum' },
   { value: 'USDT·TRX', label: 'USDT · Tron' },
 ]
 

@@ -18,9 +18,8 @@ const pools = [
 
 // ── Pending approvals ────────────────────────────────────────────────────────
 const pendingItems = [
-  { ref: 'PAY-20260318-001', party: 'Vendor Inc',         amount: '30,000', currency: 'USDC', badgeCls: 'bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400', badge: 'Pending Manager' },
-  { ref: 'PAY-20260316-002', party: 'Shenzhen Parts Ltd', amount: '75,000', currency: 'USDT', badgeCls: 'bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-400',         badge: 'Expired' },
-  { ref: 'PAY-20260313-004', party: 'SaaS Corp',          amount: '5,000',  currency: 'USDT', badgeCls: 'bg-violet-50 dark:bg-violet-500/10 text-violet-700 dark:text-violet-400', badge: 'Awaiting Sig.' },
+  { ref: 'PAY-20260318-001', party: 'Vendor Inc', amount: '30,000', currency: 'USDC', badgeCls: 'bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400',         badge: 'Pending Manager' },
+  { ref: 'PAY-20260313-004', party: 'SaaS Corp',  amount: '5,000',  currency: 'USDT', badgeCls: 'bg-violet-50 dark:bg-violet-500/10 text-violet-700 dark:text-violet-400', badge: 'Awaiting Sig.' },
 ]
 
 // ── Reconciliation items ─────────────────────────────────────────────────────
@@ -104,7 +103,7 @@ export default function Dashboard() {
             <div className="flex items-center gap-2">
               <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">Pending Approvals</span>
               <span className="w-5 h-5 rounded-full bg-amber-500 text-white flex items-center justify-center text-[10px] font-bold">
-                {pendingItems.length}
+                2
               </span>
             </div>
             <div className="w-7 h-7 rounded-lg bg-amber-50 dark:bg-amber-500/10 flex items-center justify-center">
