@@ -12,19 +12,23 @@ const ROLE_OPTIONS: { key: RoleKey; label: string }[] = [
   { key: 'auditor',  label: 'Auditor' },
 ]
 
-const CURRENCIES = ['USDC', 'USDT', 'DAI']
-const NETWORKS   = ['ETH', 'POL', 'SOL', 'TRX']
+const CURRENCY_NETWORK_OPTIONS = [
+  { value: 'USDC·ETH', label: 'USDC · Ethereum' },
+  { value: 'USDC·POL', label: 'USDC · Polygon' },
+  { value: 'USDC·SOL', label: 'USDC · Solana' },
+  { value: 'USDT·ETH', label: 'USDT · Ethereum' },
+  { value: 'USDT·TRX', label: 'USDT · Tron' },
+]
 
 const emptyDoc = () => ({
-  counterparty: '',
-  ref:          '',
-  amount:       '',
-  currency:     'USDC',
-  network:      'ETH',
-  date:         '',
-  dueDate:      '',
-  category:     '',
-  notes:        '',
+  counterparty:    '',
+  ref:             '',
+  amount:          '',
+  currencyNetwork: 'USDC·ETH',
+  date:            '',
+  dueDate:         '',
+  category:        '',
+  notes:           '',
 })
 
 export function OnboardingModal() {
@@ -68,6 +72,10 @@ export function OnboardingModal() {
     if (destination === 'reconcile') navigate('/reconciliation')
     else navigate('/dashboard')
   }
+
+  // Disable logic per step
+  const step1Disabled = !name.trim() || !company.trim()
+  const step2Disabled = !wallet.trim()
 
   return (
     <div className="modal-backdrop" onClick={(e) => e.target === e.currentTarget && close()}>
@@ -125,7 +133,7 @@ export function OnboardingModal() {
                   />
                 </div>
                 <div>
-                  <label htmlFor="ob-role" className={labelCls}>Your Role</label>
+                  <label htmlFor="ob-role" className={labelCls}>Your Role <span className="text-red-400">*</span></label>
                   <select
                     id="ob-role"
                     value={roleKey}
@@ -136,7 +144,7 @@ export function OnboardingModal() {
                   </select>
                 </div>
                 <div>
-                  <label htmlFor="ob-company" className={labelCls}>Company / Organisation</label>
+                  <label htmlFor="ob-company" className={labelCls}>Company / Organisation <span className="text-red-400">*</span></label>
                   <input
                     id="ob-company"
                     type="text"
@@ -154,8 +162,20 @@ export function OnboardingModal() {
           {step === 2 && (
             <div className="space-y-4">
               <p className="text-sm text-gray-500 dark:text-gray-400">Connect a wallet address to track on-chain payments and reconcile transactions.</p>
+
+              {/* Info box */}
+              <div className="bg-blue-50 dark:bg-blue-500/[0.08] border border-blue-100 dark:border-blue-500/20 rounded-lg p-3 text-xs text-blue-700 dark:text-blue-300">
+                <p className="font-semibold mb-1">We track balances and transactions for the following tokens:</p>
+                <ul className="space-y-0.5">
+                  <li>• USDC · Ethereum &nbsp;&nbsp; • USDC · Polygon</li>
+                  <li>• USDT · Ethereum &nbsp;&nbsp; • USDT · Tron</li>
+                  <li>• USDC · Solana</li>
+                </ul>
+                <p className="mt-2 text-blue-600 dark:text-blue-400">Make sure your wallet address holds one or more of these tokens.</p>
+              </div>
+
               <div>
-                <label htmlFor="ob-wallet" className={labelCls}>Wallet Address</label>
+                <label htmlFor="ob-wallet" className={labelCls}>Wallet Address <span className="text-red-400">*</span></label>
                 <input
                   id="ob-wallet"
                   type="text"
@@ -164,17 +184,6 @@ export function OnboardingModal() {
                   placeholder="0x… or TQ…"
                   className={`${inputCls} font-mono`}
                 />
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                {['Ethereum', 'Polygon', 'Solana', 'Tron'].map((net, i) => (
-                  <button
-                    key={net}
-                    className="flex items-center gap-2 p-2.5 rounded-lg border text-xs font-medium transition-colors border-gray-100 dark:border-white/[0.08] text-gray-700 dark:text-gray-300 hover:border-orange-300 dark:hover:border-orange-500/40 bg-white dark:bg-white/[0.03]"
-                  >
-                    <span className={`w-2 h-2 rounded-full ${['bg-blue-400','bg-violet-400','bg-emerald-400','bg-red-400'][i]}`} />
-                    {net}
-                  </button>
-                ))}
               </div>
             </div>
           )}
@@ -202,22 +211,16 @@ export function OnboardingModal() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-3">
-                <div className="col-span-1">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
                   <label htmlFor="ob-inv-amount" className={labelCls}>Amount *</label>
                   <input id="ob-inv-amount" aria-required="true" value={invForm.amount} onChange={(e) => setInv('amount', e.target.value)}
                     placeholder="0.00" type="number" min="0" className={inputCls} />
                 </div>
                 <div>
-                  <label htmlFor="ob-inv-currency" className={labelCls}>Currency</label>
-                  <select id="ob-inv-currency" value={invForm.currency} onChange={(e) => setInv('currency', e.target.value)} className={inputCls}>
-                    {CURRENCIES.map((c) => <option key={c}>{c}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label htmlFor="ob-inv-network" className={labelCls}>Network</label>
-                  <select id="ob-inv-network" value={invForm.network} onChange={(e) => setInv('network', e.target.value)} className={inputCls}>
-                    {NETWORKS.map((n) => <option key={n}>{n}</option>)}
+                  <label htmlFor="ob-inv-cn" className={labelCls}>Currency &amp; Network *</label>
+                  <select id="ob-inv-cn" value={invForm.currencyNetwork} onChange={(e) => setInv('currencyNetwork', e.target.value)} className={inputCls}>
+                    {CURRENCY_NETWORK_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                   </select>
                 </div>
               </div>
@@ -264,22 +267,16 @@ export function OnboardingModal() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-3">
-                <div className="col-span-1">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
                   <label htmlFor="ob-bill-amount" className={labelCls}>Amount *</label>
                   <input id="ob-bill-amount" aria-required="true" value={billForm.amount} onChange={(e) => setBill('amount', e.target.value)}
                     placeholder="0.00" type="number" min="0" className={inputCls} />
                 </div>
                 <div>
-                  <label htmlFor="ob-bill-currency" className={labelCls}>Currency</label>
-                  <select id="ob-bill-currency" value={billForm.currency} onChange={(e) => setBill('currency', e.target.value)} className={inputCls}>
-                    {CURRENCIES.map((c) => <option key={c}>{c}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label htmlFor="ob-bill-network" className={labelCls}>Network</label>
-                  <select id="ob-bill-network" value={billForm.network} onChange={(e) => setBill('network', e.target.value)} className={inputCls}>
-                    {NETWORKS.map((n) => <option key={n}>{n}</option>)}
+                  <label htmlFor="ob-bill-cn" className={labelCls}>Currency &amp; Network *</label>
+                  <select id="ob-bill-cn" value={billForm.currencyNetwork} onChange={(e) => setBill('currencyNetwork', e.target.value)} className={inputCls}>
+                    {CURRENCY_NETWORK_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                   </select>
                 </div>
               </div>
@@ -338,12 +335,17 @@ export function OnboardingModal() {
         {/* Footer */}
         {step < 5 && (
           <div className="flex items-center justify-between px-5 pb-5 border-t border-gray-100 dark:border-white/[0.06] pt-4">
-            <button onClick={skip} className="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors">
-              Skip
-            </button>
+            {/* Steps 3 & 4 have skip; steps 1 & 2 do not */}
+            {step >= 3 ? (
+              <button onClick={skip} className="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors">
+                Skip
+              </button>
+            ) : (
+              <span />
+            )}
             <Button
               size="sm"
-              disabled={step === 1 && !name.trim()}
+              disabled={step === 1 ? step1Disabled : step === 2 ? step2Disabled : false}
               onClick={next}
             >
               {(step === 3 && invForm.counterparty.trim() && invForm.amount.trim()) ||

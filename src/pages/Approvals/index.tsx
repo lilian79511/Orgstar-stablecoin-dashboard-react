@@ -1,13 +1,13 @@
 import { useState } from 'react'
 import {
   CheckCircle2, XCircle, Clock, AlertTriangle, Copy,
-  PenLine, Plus, ChevronDown, Calendar,
+  PenLine, Plus, Calendar, ChevronUp, ChevronDown as ChevronDownIcon, X,
 } from 'lucide-react'
 import { Drawer } from '@/components/ui/Drawer'
 import { useUiStore } from '@/stores/uiStore'
 
 // ── Types ────────────────────────────────────────────────────────────────────
-type PayStatus = 'pending-manager' | 'expired' | 'awaiting-sig' | 'rejected' | 'paid'
+type PayStatus = 'pending-manager' | 'awaiting-sig' | 'rejected' | 'paid'
 
 interface ApprovalStep {
   role: string
@@ -54,7 +54,7 @@ const PAYMENTS: Payment[] = [
   },
   {
     id: 'p2', ref: 'PAY-20260316-002', payee: 'Shenzhen Parts Ltd', amount: 75000, currency: 'USDT',
-    purpose: 'Raw Materials', status: 'expired',
+    purpose: 'Raw Materials', status: 'pending-manager',
     deadline: 'Mar 22, 2026', deadlineExpired: true,
     createdDate: 'Mar 16, 2026', createdTime: '09:30', createdBy: '陳琳達',
     toAddress: '0x3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b',
@@ -67,7 +67,7 @@ const PAYMENTS: Payment[] = [
   },
   {
     id: 'p3', ref: 'PAY-20260315-003', payee: 'Global Imports Ltd', amount: 120000, currency: 'USDC',
-    purpose: 'Q1 Inventory Purchase', status: 'expired',
+    purpose: 'Q1 Inventory Purchase', status: 'pending-manager',
     deadline: 'Mar 20, 2026', deadlineExpired: true,
     createdDate: 'Mar 15, 2026', createdTime: '16:45', createdBy: 'Kevin Wu',
     toAddress: '0x7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d',
@@ -135,7 +135,6 @@ const PAYMENTS: Payment[] = [
 // ── Status config ─────────────────────────────────────────────────────────────
 const STATUS_CFG: Record<PayStatus, { label: string; cls: string; Icon: React.ElementType }> = {
   'pending-manager': { label: 'Pending Manager', cls: 'bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400',       Icon: Clock },
-  'expired':         { label: 'Expired',         cls: 'bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-400',               Icon: Clock },
   'awaiting-sig':    { label: 'Awaiting Sig.',   cls: 'bg-violet-50 dark:bg-violet-500/10 text-violet-700 dark:text-violet-400',   Icon: PenLine },
   'rejected':        { label: 'Rejected',        cls: 'bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-400',               Icon: XCircle },
   'paid':            { label: 'Paid',            cls: 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400', Icon: CheckCircle2 },
@@ -210,14 +209,12 @@ function ChainStep({ step, isLast }: { step: ApprovalStep; isLast: boolean }) {
 
   return (
     <div className="flex gap-3">
-      {/* Timeline column */}
       <div className="flex flex-col items-center">
         <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${dotCls}`}>
           {DotIcon && <DotIcon className="w-2.5 h-2.5 text-white" />}
         </div>
         {!isLast && <div className="w-px flex-1 bg-gray-200 dark:bg-white/10 mt-1 mb-1 min-h-[20px]" />}
       </div>
-      {/* Content */}
       <div className={`pb-4 ${isLast ? '' : ''}`}>
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-xs font-semibold text-gray-800 dark:text-gray-200">{step.role}</span>
@@ -234,14 +231,28 @@ function ChainStep({ step, isLast }: { step: ApprovalStep; isLast: boolean }) {
 // ── Detail Drawer ────────────────────────────────────────────────────────────
 function PaymentDrawer({ payment, onClose }: { payment: Payment | null; onClose: () => void }) {
   const { showToast } = useUiStore()
+  const [comment, setComment] = useState('')
+  const [confirmOpen, setConfirmOpen] = useState(false)
 
   if (!payment) return null
 
   const awaitingStep = payment.chain.find((s) => s.status === 'awaiting')
+  const isAwaitingSig = payment.status === 'awaiting-sig'
 
   function copyAddress() {
     if (!payment) return
     navigator.clipboard.writeText(payment.toAddress).then(() => showToast('Address copied', 'success'))
+  }
+
+  function handleApproveConfirm() {
+    showToast(`Payment ${payment!.ref} approved and sent`, 'success')
+    setConfirmOpen(false)
+    onClose()
+  }
+
+  function handleReject() {
+    showToast(`Payment ${payment!.ref} rejected`, 'error')
+    onClose()
   }
 
   return (
@@ -339,8 +350,60 @@ function PaymentDrawer({ payment, onClose }: { payment: Payment | null; onClose:
         </div>
       )}
 
-      {/* ── Footer notice ── */}
-      {awaitingStep && (
+      {/* ── Footer: awaiting-sig actions ── */}
+      {isAwaitingSig && (
+        <div className="sticky bottom-0 bg-white dark:bg-[#1a1d27] border-t border-gray-100 dark:border-white/[0.06] pt-4 -mx-6 px-6 pb-1">
+          <textarea
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+            placeholder="Add a comment (optional)…"
+            rows={2}
+            className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-white/[0.03] text-sm text-gray-800 dark:text-gray-200 placeholder-gray-400 focus:outline-none focus:border-orange-400 transition-colors resize-none mb-3"
+          />
+          <div className="flex gap-2 mb-4">
+            <button
+              onClick={handleReject}
+              className="flex-1 py-2.5 rounded-xl border border-red-200 dark:border-red-500/30 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/5 transition-colors"
+            >
+              Reject
+            </button>
+            <button
+              onClick={() => setConfirmOpen(true)}
+              className="flex-1 py-2.5 rounded-xl bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold transition-colors"
+            >
+              Approve
+            </button>
+          </div>
+
+          {/* Confirm modal */}
+          {confirmOpen && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+              <div className="bg-white dark:bg-[#1a1d27] rounded-2xl shadow-xl w-full max-w-sm mx-4 p-6">
+                <h4 className="font-grotesk font-semibold text-base text-gray-900 dark:text-white mb-2">Confirm Approval</h4>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Are you sure you want to approve this payment?</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">Once approved, this transaction will be sent to <strong className="text-gray-800 dark:text-gray-200">{payment.payee}</strong>.</p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setConfirmOpen(false)}
+                    className="flex-1 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleApproveConfirm}
+                    className="flex-1 py-2.5 rounded-xl bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold transition-colors"
+                  >
+                    Confirm &amp; Approve →
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── Footer notice for pending-manager ── */}
+      {!isAwaitingSig && awaitingStep && (
         <div className="sticky bottom-0 bg-white dark:bg-[#1a1d27] border-t border-gray-100 dark:border-white/[0.06] pt-4 -mx-6 px-6 pb-1">
           <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-50 dark:bg-amber-500/[0.08] border border-amber-100 dark:border-amber-500/20 mb-4">
             <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />
@@ -361,46 +424,105 @@ function PaymentDrawer({ payment, onClose }: { payment: Payment | null; onClose:
 }
 
 // ── Tab type ─────────────────────────────────────────────────────────────────
-type TabKey = 'all' | 'todo' | 'waiting-sig' | 'paid' | 'rejected'
+type TabKey = 'all' | 'awaiting-sig' | 'pending' | 'paid' | 'rejected'
 
 const TABS: { key: TabKey; label: string }[] = [
-  { key: 'all',         label: 'All' },
-  { key: 'todo',        label: 'To-do' },
-  { key: 'waiting-sig', label: 'Waiting Signature' },
-  { key: 'paid',        label: 'Paid' },
-  { key: 'rejected',    label: 'Rejected' },
+  { key: 'all',          label: 'All' },
+  { key: 'awaiting-sig', label: 'Awaiting Signature' },
+  { key: 'pending',      label: 'Pending' },
+  { key: 'paid',         label: 'Paid' },
+  { key: 'rejected',     label: 'Rejected' },
 ]
 
 function tabFilter(p: Payment, tab: TabKey): boolean {
-  if (tab === 'all')         return true
-  if (tab === 'todo')        return p.status === 'pending-manager' || p.status === 'expired'
-  if (tab === 'waiting-sig') return p.status === 'awaiting-sig'
-  if (tab === 'paid')        return p.status === 'paid'
-  if (tab === 'rejected')    return p.status === 'rejected'
+  if (tab === 'all')          return true
+  if (tab === 'awaiting-sig') return p.status === 'awaiting-sig'
+  if (tab === 'pending')      return p.status === 'pending-manager'
+  if (tab === 'paid')         return p.status === 'paid'
+  if (tab === 'rejected')     return p.status === 'rejected'
   return true
 }
 
+type SortCol = 'created' | 'id' | 'payee' | 'amount' | 'deadline'
+
+const CURRENCY_NETWORK_OPTIONS = [
+  { value: 'USDC·ETH', label: 'USDC · Ethereum' },
+  { value: 'USDC·POL', label: 'USDC · Polygon' },
+  { value: 'USDC·SOL', label: 'USDC · Solana' },
+  { value: 'USDT·ETH', label: 'USDT · Ethereum' },
+  { value: 'USDT·TRX', label: 'USDT · Tron' },
+]
+
+const inputCls = 'px-3 py-2 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-white/[0.03] text-sm text-gray-800 dark:text-gray-200 placeholder-gray-400 focus:outline-none focus:border-orange-400 transition-colors'
+
 // ── Main page ─────────────────────────────────────────────────────────────────
 export default function Approvals() {
-  const [tab,     setTab]     = useState<TabKey>('all')
-  const [sort,    setSort]    = useState<'newest' | 'oldest'>('newest')
+  const [tab,      setTab]      = useState<TabKey>('all')
+  const [sortCol,  setSortCol]  = useState<SortCol>('created')
+  const [sortDir,  setSortDir]  = useState<'asc' | 'desc'>('desc')
   const [selected, setSelected] = useState<Payment | null>(null)
+  const [payeeFilter, setPayeeFilter] = useState('')
+  const [statusFilter, setStatusFilter] = useState<PayStatus | ''>('')
+  const [newBillOpen, setNewBillOpen] = useState(false)
+
+  // New bill form state
+  const [nbPayee, setNbPayee] = useState('')
+  const [nbWallet, setNbWallet] = useState('')
+  const [nbAmount, setNbAmount] = useState('')
+  const [nbCN, setNbCN] = useState('USDC·ETH')
+  const [nbPurpose, setNbPurpose] = useState('')
+  const [nbDeadline, setNbDeadline] = useState('')
+
   const { showToast } = useUiStore()
 
-  const todoCount   = PAYMENTS.filter((p) => tabFilter(p, 'todo')).length
-  const waitingCount = PAYMENTS.filter((p) => tabFilter(p, 'waiting-sig')).length
+  const awaitingCount = PAYMENTS.filter((p) => p.status === 'awaiting-sig').length
+  const pendingCount  = PAYMENTS.filter((p) => p.status === 'pending-manager').length
 
-  const visible = PAYMENTS
-    .filter((p) => tabFilter(p, tab))
-    .sort((a, b) => sort === 'newest'
-      ? b.createdDate.localeCompare(a.createdDate)
-      : a.createdDate.localeCompare(b.createdDate)
-    )
+  function toggleSort(col: SortCol) {
+    if (sortCol === col) {
+      setSortDir((d) => d === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSortCol(col)
+      setSortDir('desc')
+    }
+  }
+
+  function SortIcon({ col }: { col: SortCol }) {
+    if (sortCol !== col) return <span className="text-gray-300 dark:text-gray-600 ml-1">↕</span>
+    return sortDir === 'asc'
+      ? <ChevronUp className="w-3 h-3 inline ml-1 text-orange-500" />
+      : <ChevronDownIcon className="w-3 h-3 inline ml-1 text-orange-500" />
+  }
+
+  function sortPayments(list: Payment[]): Payment[] {
+    return [...list].sort((a, b) => {
+      let cmp = 0
+      if (sortCol === 'created') cmp = a.createdDate.localeCompare(b.createdDate)
+      if (sortCol === 'id')      cmp = a.ref.localeCompare(b.ref)
+      if (sortCol === 'payee')   cmp = a.payee.localeCompare(b.payee)
+      if (sortCol === 'amount')  cmp = a.amount - b.amount
+      if (sortCol === 'deadline') {
+        const da = a.deadline ?? ''
+        const db = b.deadline ?? ''
+        cmp = da.localeCompare(db)
+      }
+      return sortDir === 'asc' ? cmp : -cmp
+    })
+  }
+
+  const hasFilter = payeeFilter !== '' || statusFilter !== ''
+
+  const visible = sortPayments(
+    PAYMENTS
+      .filter((p) => tabFilter(p, tab))
+      .filter((p) => payeeFilter === '' || p.payee.toLowerCase().includes(payeeFilter.toLowerCase()))
+      .filter((p) => statusFilter === '' || p.status === statusFilter)
+  )
 
   function getRowAction(p: Payment) {
     if (p.status === 'awaiting-sig') return (
       <button
-        onClick={(e) => { e.stopPropagation(); showToast(`Signed ${p.ref}`, 'success') }}
+        onClick={(e) => { e.stopPropagation(); setSelected(p) }}
         className="px-3 py-1 rounded-lg bg-orange-500 hover:bg-orange-600 text-white text-xs font-semibold transition-colors"
       >
         Sign
@@ -424,6 +546,12 @@ export default function Approvals() {
     )
   }
 
+  function handleNewBillSubmit() {
+    showToast('Payment request submitted for approval', 'success')
+    setNewBillOpen(false)
+    setNbPayee(''); setNbWallet(''); setNbAmount(''); setNbCN('USDC·ETH'); setNbPurpose(''); setNbDeadline('')
+  }
+
   return (
     <div className="p-6 space-y-4">
 
@@ -434,18 +562,18 @@ export default function Approvals() {
           <p className="text-xs text-gray-400 mt-0.5">Outbound payments and approval status</p>
         </div>
         <button
-          onClick={() => showToast('New Bill form coming soon', 'info')}
+          onClick={() => setNewBillOpen(true)}
           className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-orange-500 hover:bg-orange-600 text-white text-xs font-semibold transition-colors"
         >
           <Plus className="w-3.5 h-3.5" /> New Bill
         </button>
       </div>
 
-      {/* Tabs + Sort */}
-      <div className="flex items-center justify-between gap-4 border-b border-gray-100 dark:border-white/[0.08]">
+      {/* Tabs */}
+      <div className="flex items-center border-b border-gray-100 dark:border-white/[0.08]">
         <div role="tablist" className="flex items-center overflow-x-auto">
           {TABS.map(({ key, label }) => {
-            const badge = key === 'todo' ? todoCount : key === 'waiting-sig' ? waitingCount : 0
+            const badge = key === 'awaiting-sig' ? awaitingCount : key === 'pending' ? pendingCount : 0
             return (
               <button
                 key={key}
@@ -470,15 +598,36 @@ export default function Approvals() {
             )
           })}
         </div>
-        <div className="shrink-0 pb-2">
+      </div>
+
+      {/* Filter row */}
+      <div className="flex items-center gap-2 mb-3">
+        <input
+          type="text"
+          value={payeeFilter}
+          onChange={(e) => setPayeeFilter(e.target.value)}
+          placeholder="Filter by payee…"
+          className={`${inputCls} w-48`}
+        />
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value as PayStatus | '')}
+          className={inputCls}
+        >
+          <option value="">All Statuses</option>
+          <option value="pending-manager">Pending Manager</option>
+          <option value="awaiting-sig">Awaiting Signature</option>
+          <option value="paid">Paid</option>
+          <option value="rejected">Rejected</option>
+        </select>
+        {hasFilter && (
           <button
-            onClick={() => setSort((s) => s === 'newest' ? 'oldest' : 'newest')}
-            className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors font-medium"
+            onClick={() => { setPayeeFilter(''); setStatusFilter('') }}
+            className="text-xs text-orange-500 hover:text-orange-600 font-medium transition-colors"
           >
-            {sort === 'newest' ? 'Newest first' : 'Oldest first'}
-            <ChevronDown className="w-3 h-3" />
+            Clear
           </button>
-        </div>
+        )}
       </div>
 
       {/* Table */}
@@ -488,13 +637,23 @@ export default function Approvals() {
           <table className="w-full text-xs">
             <thead>
               <tr className="border-b border-gray-100 dark:border-white/[0.06]">
-                {['Created', 'ID', 'Payee', 'Amount', 'Purpose', 'Status', 'Approval Deadline', ''].map((h) => (
+                {[
+                  { label: 'Created',           col: 'created'  as SortCol, sortable: true },
+                  { label: 'ID',                col: 'id'       as SortCol, sortable: true },
+                  { label: 'Payee',             col: 'payee'    as SortCol, sortable: true },
+                  { label: 'Amount',            col: 'amount'   as SortCol, sortable: true, right: true },
+                  { label: 'Status',            col: null,                  sortable: false },
+                  { label: 'Approval Deadline', col: 'deadline' as SortCol, sortable: true },
+                  { label: '',                  col: null,                  sortable: false },
+                ].map((h, i) => (
                   <th
-                    key={h}
+                    key={i}
                     scope="col"
-                    className={`px-5 py-3 text-[10px] font-semibold text-gray-400 uppercase tracking-wide text-left whitespace-nowrap ${h === 'Amount' ? 'text-right' : ''}`}
+                    onClick={h.sortable && h.col ? () => toggleSort(h.col!) : undefined}
+                    className={`px-5 py-3 text-[10px] font-semibold text-gray-400 uppercase tracking-wide text-left whitespace-nowrap ${h.right ? 'text-right' : ''} ${h.sortable ? 'cursor-pointer hover:text-gray-600 dark:hover:text-gray-300 select-none' : ''}`}
                   >
-                    {h}
+                    {h.label}
+                    {h.sortable && h.col && <SortIcon col={h.col} />}
                   </th>
                 ))}
               </tr>
@@ -517,7 +676,6 @@ export default function Approvals() {
                       <span className="w-1.5 h-1.5 rounded-full bg-blue-500 inline-block" />{p.currency}
                     </span>
                   </td>
-                  <td className="px-5 py-4 text-gray-600 dark:text-gray-400 whitespace-nowrap">{p.purpose}</td>
                   <td className="px-5 py-4 whitespace-nowrap">
                     <StatusPill status={p.status} />
                   </td>
@@ -538,7 +696,7 @@ export default function Approvals() {
               ))}
               {visible.length === 0 && (
                 <tr>
-                  <td colSpan={8} className="px-5 py-10 text-center text-xs text-gray-400">
+                  <td colSpan={7} className="px-5 py-10 text-center text-xs text-gray-400">
                     No payments in this category.
                   </td>
                 </tr>
@@ -552,6 +710,65 @@ export default function Approvals() {
       {/* Detail drawer */}
       {selected && (
         <PaymentDrawer payment={selected} onClose={() => setSelected(null)} />
+      )}
+
+      {/* New Bill modal */}
+      {newBillOpen && (
+        <div className="modal-backdrop" onClick={(e) => e.target === e.currentTarget && setNewBillOpen(false)}>
+          <div className="modal-box w-full max-w-lg" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-gray-100 dark:border-white/[0.06]">
+              <h3 className="font-grotesk font-semibold text-base text-gray-900 dark:text-white">New Payment Request</h3>
+              <button onClick={() => setNewBillOpen(false)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="p-5 space-y-3">
+              <div>
+                <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Payee / Vendor <span className="text-red-400">*</span></label>
+                <input value={nbPayee} onChange={(e) => setNbPayee(e.target.value)} placeholder="e.g. Vendor Inc" className={`w-full ${inputCls}`} />
+              </div>
+              <div>
+                <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Wallet Address <span className="text-red-400">*</span></label>
+                <input value={nbWallet} onChange={(e) => setNbWallet(e.target.value)} placeholder="0x… or TQ…" className={`w-full font-mono ${inputCls}`} />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Amount <span className="text-red-400">*</span></label>
+                  <input type="number" value={nbAmount} onChange={(e) => setNbAmount(e.target.value)} placeholder="0.00" className={`w-full ${inputCls}`} />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Currency &amp; Network <span className="text-red-400">*</span></label>
+                  <select value={nbCN} onChange={(e) => setNbCN(e.target.value)} className={`w-full ${inputCls}`}>
+                    {CURRENCY_NETWORK_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Purpose / Description</label>
+                <input value={nbPurpose} onChange={(e) => setNbPurpose(e.target.value)} placeholder="e.g. Software license" className={`w-full ${inputCls}`} />
+              </div>
+              <div>
+                <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Payment Deadline</label>
+                <input type="date" value={nbDeadline} onChange={(e) => setNbDeadline(e.target.value)} className={`w-full ${inputCls}`} />
+              </div>
+            </div>
+            <div className="flex items-center justify-end gap-2 px-5 pb-5 border-t border-gray-100 dark:border-white/[0.06] pt-4">
+              <button
+                onClick={() => setNewBillOpen(false)}
+                className="px-4 py-2 rounded-lg border border-gray-200 dark:border-white/10 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleNewBillSubmit}
+                disabled={!nbPayee.trim() || !nbWallet.trim() || !nbAmount.trim()}
+                className="px-4 py-2 rounded-lg bg-orange-500 hover:bg-orange-600 disabled:opacity-50 text-white text-sm font-semibold transition-colors"
+              >
+                Submit for Approval
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )

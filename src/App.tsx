@@ -4,6 +4,9 @@ import Dashboard from '@/pages/Dashboard'
 import Reconciliation from '@/pages/Reconciliation'
 import Treasury from '@/pages/Treasury'
 import Approvals from '@/pages/Approvals'
+import AuditTrail from '@/pages/AuditTrail'
+import TaxFiling from '@/pages/TaxFiling'
+import Whitelist from '@/pages/Whitelist'
 import ComingSoon from '@/pages/ComingSoon'
 
 export default function App() {
@@ -18,9 +21,9 @@ export default function App() {
           <Route path="treasury"       element={<Treasury />} />
           <Route path="invoices"       element={<ComingSoon title="Invoice" />} />
           <Route path="payments"       element={<ComingSoon title="Approve Payments" />} />
-          <Route path="audit"          element={<ComingSoon title="Audit Trail" />} />
-          <Route path="tax"            element={<ComingSoon title="Tax Filing" />} />
-          <Route path="whitelist"      element={<ComingSoon title="Whitelist" />} />
+          <Route path="audit"          element={<AuditTrail />} />
+          <Route path="tax"            element={<TaxFiling />} />
+          <Route path="whitelist"      element={<Whitelist />} />
         </Route>
       </Routes>
     </BrowserRouter>

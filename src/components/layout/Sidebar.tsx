@@ -2,7 +2,7 @@ import { NavLink, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import {
   LayoutDashboard, GitCompareArrows, Vault,
-  ArrowDownCircle, ArrowUpCircle, ShieldCheck,
+  ArrowDownCircle, ShieldCheck,
   FileText, ListChecks, ChevronDown, PanelLeftClose,
   CheckCircle2,
 } from 'lucide-react'
@@ -19,7 +19,6 @@ const navItems = [
 
 const comingSoonItems = [
   { to: '/invoices',   icon: ArrowDownCircle, key: 'nav.invoice',   badge: '2', badgeColor: 'bg-orange-100 dark:bg-orange-500/15 text-orange-600 dark:text-orange-400' },
-  { to: '/payments',   icon: ArrowUpCircle,   key: 'nav.payments',  badge: '1', badgeColor: 'bg-orange-100 dark:bg-orange-500/15 text-orange-600 dark:text-orange-400' },
   { to: '/audit',      icon: ShieldCheck,     key: 'nav.audit' },
   { to: '/tax',        icon: FileText,        key: 'nav.tax',       badge: 'TW', badgeColor: 'bg-blue-50 dark:bg-blue-500/15 text-blue-600 dark:text-blue-400' },
   { to: '/whitelist',  icon: ListChecks,      key: 'nav.whitelist' },
