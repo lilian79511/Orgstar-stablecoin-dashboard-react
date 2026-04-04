@@ -530,6 +530,23 @@ export default function Approvals() {
   const parsedAmount = parseFloat(nbAmount) || 0
   const policyTier = getPolicyTier(parsedAmount)
 
+  // ── Policy engine checks ─────────────────────────────────────────────────
+  // KYT: wallet must be entered and look plausibly valid (0x… or T…)
+  const walletTrimmed = nbWallet.trim()
+  const kytPass = walletTrimmed.length >= 10 &&
+    (walletTrimmed.startsWith('0x') || walletTrimmed.startsWith('T'))
+
+  // Liquidity: compare amount against the treasury pool for the selected network
+  const POOL_BALANCES: Record<string, number> = {
+    'USDC·ETH': 250000,
+    'USDC·POL': 100000,
+    'USDC·SOL': 65000,
+    'USDT·TRX': 85000,
+  }
+  const poolBalance = POOL_BALANCES[nbCN] ?? 0
+  const liquidityChecked = parsedAmount > 0
+  const liquidityOk = liquidityChecked && parsedAmount <= poolBalance
+
   function toggleSort(col: SortCol) {
     if (sortCol === col) {
       setSortDir((d) => d === 'asc' ? 'desc' : 'asc')
@@ -849,12 +866,30 @@ export default function Approvals() {
               <div className="rounded-lg border border-gray-100 dark:border-white/[0.08] bg-gray-50/60 dark:bg-white/[0.03] p-3">
                 <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-2">Policy Engine Preview</p>
                 <div className="flex items-center gap-2 flex-wrap mb-1.5">
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400">
-                    <CheckCircle2 className="w-3 h-3" /> KYT Pass
-                  </span>
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400">
-                    <CheckCircle2 className="w-3 h-3" /> Liquidity OK
-                  </span>
+                  {/* KYT — only passes once wallet address is entered */}
+                  {kytPass ? (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400">
+                      <CheckCircle2 className="w-3 h-3" /> KYT Pass
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-gray-100 dark:bg-white/[0.07] text-gray-400 dark:text-gray-500">
+                      <Clock className="w-3 h-3" /> KYT Pending
+                    </span>
+                  )}
+                  {/* Liquidity — validates amount against pool balance */}
+                  {!liquidityChecked ? (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-gray-100 dark:bg-white/[0.07] text-gray-400 dark:text-gray-500">
+                      <Clock className="w-3 h-3" /> Liquidity —
+                    </span>
+                  ) : liquidityOk ? (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400">
+                      <CheckCircle2 className="w-3 h-3" /> Liquidity OK
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400">
+                      <XCircle className="w-3 h-3" /> Insufficient Funds
+                    </span>
+                  )}
                   {policyTier === 1 && (
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400">
                       <CheckCircle2 className="w-3 h-3" /> DoA: Auto Execute
@@ -872,9 +907,11 @@ export default function Approvals() {
                   )}
                 </div>
                 <p className="text-[11px] text-gray-400">
-                  {policyTier === 1 && 'Amount < $1,000 — no approval required, will execute immediately.'}
-                  {policyTier === 2 && 'Amount $1k–$50k — requires one-level manager approval before execution.'}
-                  {policyTier === 3 && 'Amount > $50,000 — requires dual approval from Manager and CFO.'}
+                  {!kytPass && 'Enter a wallet address to run KYT screening. '}
+                  {liquidityChecked && !liquidityOk && `Insufficient balance — pool holds ${poolBalance.toLocaleString()} ${nbCN.split('·')[0]}. `}
+                  {kytPass && liquidityOk && policyTier === 1 && 'Amount < $1,000 — no approval required, will execute immediately.'}
+                  {kytPass && liquidityOk && policyTier === 2 && 'Amount $1k–$50k — requires one-level manager approval before execution.'}
+                  {kytPass && liquidityOk && policyTier === 3 && 'Amount > $50,000 — requires dual approval from Manager and CFO.'}
                 </p>
               </div>
 
@@ -909,7 +946,7 @@ export default function Approvals() {
               </button>
               <button
                 onClick={handleNewBillSubmit}
-                disabled={!nbPayee.trim() || !nbWallet.trim() || !nbAmount.trim()}
+                disabled={!nbPayee.trim() || !kytPass || !liquidityOk}
                 className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-orange-500 hover:bg-orange-600 disabled:opacity-50 text-white text-sm font-semibold transition-colors"
               >
                 <Send className="w-3.5 h-3.5" />
