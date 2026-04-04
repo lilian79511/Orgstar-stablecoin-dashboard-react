@@ -50,8 +50,8 @@ const PAYMENTS: Payment[] = [
     policyKyt: true, policyLiquidity: true, policyDoa: 'Manager',
     chain: [
       { role: 'Finance Specialist', status: 'approved', name: '陳琳達', date: 'Mar 18 · 14:02', note: 'Submitted for approval' },
-      { role: 'Manager',            status: 'awaiting', name: 'Wei-Ling Chang',                   note: 'Required — amount ≥ $1,000' },
-      { role: 'CFO',                status: 'queued',   name: 'James Liu',                        note: 'Not required for this amount' },
+      { role: 'Manager',            status: 'awaiting', name: '王大明',                   note: 'Required — amount ≥ $1,000' },
+      { role: 'CFO',                status: 'queued',   name: '李財長',                        note: 'Not required for this amount' },
     ],
   },
   {
@@ -63,8 +63,8 @@ const PAYMENTS: Payment[] = [
     policyKyt: true, policyLiquidity: false, policyDoa: 'CFO',
     chain: [
       { role: 'Finance Specialist', status: 'approved', name: '陳琳達',        date: 'Mar 16 · 09:30', note: 'Submitted for approval' },
-      { role: 'Manager',            status: 'approved', name: 'Wei-Ling Chang', date: 'Mar 17 · 11:00', note: 'Approved' },
-      { role: 'CFO',                status: 'awaiting', name: 'James Liu',                              note: 'Required — amount ≥ $50,000' },
+      { role: 'Manager',            status: 'approved', name: '王大明', date: 'Mar 17 · 11:00', note: 'Approved' },
+      { role: 'CFO',                status: 'awaiting', name: '李財長',                              note: 'Required — amount ≥ $50,000' },
     ],
   },
   {
@@ -76,8 +76,8 @@ const PAYMENTS: Payment[] = [
     policyKyt: true, policyLiquidity: true, policyDoa: 'CFO',
     chain: [
       { role: 'Finance Specialist', status: 'approved', name: 'Kevin Wu',       date: 'Mar 15 · 16:45', note: 'Submitted for approval' },
-      { role: 'Manager',            status: 'approved', name: 'Wei-Ling Chang', date: 'Mar 16 · 10:20', note: 'Approved' },
-      { role: 'CFO',                status: 'awaiting', name: 'James Liu',                              note: 'Required — amount ≥ $50,000' },
+      { role: 'Manager',            status: 'approved', name: '王大明', date: 'Mar 16 · 10:20', note: 'Approved' },
+      { role: 'CFO',                status: 'awaiting', name: '李財長',                              note: 'Required — amount ≥ $50,000' },
     ],
   },
   {
@@ -89,8 +89,8 @@ const PAYMENTS: Payment[] = [
     policyKyt: true, policyLiquidity: true, policyDoa: 'Manager',
     chain: [
       { role: 'Finance Specialist', status: 'approved', name: 'Lillian Chen',   date: 'Mar 13 · 11:15', note: 'Submitted for approval' },
-      { role: 'Manager',            status: 'approved', name: 'Wei-Ling Chang', date: 'Mar 14 · 09:00', note: 'Approved' },
-      { role: 'CFO',                status: 'queued',   name: 'James Liu',                              note: 'Not required for this amount' },
+      { role: 'Manager',            status: 'approved', name: '王大明', date: 'Mar 14 · 09:00', note: 'Approved' },
+      { role: 'CFO',                status: 'queued',   name: '李財長',                              note: 'Not required for this amount' },
     ],
   },
   {
@@ -102,8 +102,8 @@ const PAYMENTS: Payment[] = [
     policyKyt: false, policyLiquidity: true, policyDoa: 'Manager',
     chain: [
       { role: 'Finance Specialist', status: 'approved',  name: 'Sam Huang',      date: 'Mar 12 · 14:50', note: 'Submitted for approval' },
-      { role: 'Manager',            status: 'rejected',  name: 'Wei-Ling Chang', date: 'Mar 13 · 10:30', note: 'KYT check failed — unknown counterparty' },
-      { role: 'CFO',                status: 'queued',    name: 'James Liu',                              note: 'Not required for this amount' },
+      { role: 'Manager',            status: 'rejected',  name: '王大明', date: 'Mar 13 · 10:30', note: 'KYT check failed — unknown counterparty' },
+      { role: 'CFO',                status: 'queued',    name: '李財長',                              note: 'Not required for this amount' },
     ],
   },
   {
@@ -115,8 +115,8 @@ const PAYMENTS: Payment[] = [
     policyKyt: true, policyLiquidity: true, policyDoa: 'Finance',
     chain: [
       { role: 'Finance Specialist', status: 'approved', name: 'Lillian Chen', date: 'Mar 14 · 10:00', note: 'Submitted for approval' },
-      { role: 'Manager',            status: 'queued',   name: 'Wei-Ling Chang',                       note: 'Not required for this amount' },
-      { role: 'CFO',                status: 'queued',   name: 'James Liu',                            note: 'Not required for this amount' },
+      { role: 'Manager',            status: 'queued',   name: '王大明',                       note: 'Not required for this amount' },
+      { role: 'CFO',                status: 'queued',   name: '李財長',                            note: 'Not required for this amount' },
     ],
   },
   {
@@ -128,8 +128,8 @@ const PAYMENTS: Payment[] = [
     policyKyt: true, policyLiquidity: true, policyDoa: 'Finance',
     chain: [
       { role: 'Finance Specialist', status: 'approved', name: 'Lillian Chen',   date: 'Mar 10 · 16:06', note: 'Submitted for approval' },
-      { role: 'Manager',            status: 'approved', name: 'Wei-Ling Chang', date: 'Mar 11 · 09:00', note: 'Approved' },
-      { role: 'CFO',                status: 'queued',   name: 'James Liu',                              note: 'Not required for this amount' },
+      { role: 'Manager',            status: 'approved', name: '王大明', date: 'Mar 11 · 09:00', note: 'Approved' },
+      { role: 'CFO',                status: 'queued',   name: '李財長',                              note: 'Not required for this amount' },
     ],
   },
 ]
@@ -436,13 +436,53 @@ const TABS: { key: TabKey; label: string }[] = [
   { key: 'rejected',     label: 'Rejected' },
 ]
 
-function tabFilter(p: Payment, tab: TabKey): boolean {
-  if (tab === 'all')          return true
-  if (tab === 'awaiting-sig') return p.status === 'awaiting-sig'
-  if (tab === 'pending')      return p.status === 'pending-manager'
-  if (tab === 'paid')         return p.status === 'paid'
-  if (tab === 'rejected')     return p.status === 'rejected'
-  return true
+// Returns payments visible to a role in a given tab.
+// "Awaiting Signature" = it is THIS role's turn to act.
+// "Pending"            = waiting for SOMEONE ELSE.
+function getTabPayments(payments: Payment[], tab: TabKey, roleKey: string): Payment[] {
+  const awaitingRole = (p: Payment) => p.chain.find((s) => s.status === 'awaiting')?.role ?? ''
+
+  if (roleKey === 'auditor') {
+    // Auditor only sees Paid
+    return tab === 'paid' ? payments.filter((p) => p.status === 'paid') : []
+  }
+
+  switch (tab) {
+    case 'all':
+      // Finance sees everything; others see their relevant subset
+      if (roleKey === 'finance') return payments.filter((p) => p.status !== 'rejected' ? true : true)
+      return payments
+
+    case 'awaiting-sig':
+      // Finance: payments that completed human approval, now need on-chain sig
+      if (roleKey === 'finance') return payments.filter((p) => p.status === 'awaiting-sig')
+      // Manager: pending-manager bills where the next awaiting approver is Manager
+      if (roleKey === 'manager') return payments.filter(
+        (p) => p.status === 'pending-manager' && awaitingRole(p) === 'Manager'
+      )
+      // CFO: pending-manager bills where the next awaiting approver is CFO
+      if (roleKey === 'cfo') return payments.filter(
+        (p) => p.status === 'pending-manager' && awaitingRole(p) === 'CFO'
+      )
+      return []
+
+    case 'pending':
+      // Finance: all pending-manager (they submitted them, waiting for others)
+      if (roleKey === 'finance') return payments.filter((p) => p.status === 'pending-manager')
+      // Manager: pending-manager bills where it is NOT Manager's turn (waiting for CFO etc.)
+      if (roleKey === 'manager') return payments.filter(
+        (p) => p.status === 'pending-manager' && awaitingRole(p) !== 'Manager'
+      )
+      // CFO: pending-manager bills where it is NOT CFO's turn
+      if (roleKey === 'cfo') return payments.filter(
+        (p) => p.status === 'pending-manager' && awaitingRole(p) !== 'CFO'
+      )
+      return payments.filter((p) => p.status === 'pending-manager')
+
+    case 'paid':     return payments.filter((p) => p.status === 'paid')
+    case 'rejected': return payments.filter((p) => p.status === 'rejected')
+    default:         return payments
+  }
 }
 
 type SortCol = 'created' | 'id' | 'payee' | 'amount' | 'deadline'
@@ -484,8 +524,8 @@ export default function Approvals() {
   const { showToast } = useUiStore()
   const { profile } = useUserStore()
 
-  const awaitingCount = PAYMENTS.filter((p) => p.status === 'awaiting-sig').length
-  const pendingCount  = PAYMENTS.filter((p) => p.status === 'pending-manager').length
+  const awaitingCount = getTabPayments(PAYMENTS, 'awaiting-sig', profile.roleKey).length
+  const pendingCount  = getTabPayments(PAYMENTS, 'pending', profile.roleKey).length
 
   const parsedAmount = parseFloat(nbAmount) || 0
   const policyTier = getPolicyTier(parsedAmount)
@@ -524,22 +564,8 @@ export default function Approvals() {
 
   const hasFilter = payeeFilter !== '' || statusFilter !== ''
 
-  function roleFilter(p: Payment, currentTab: TabKey): boolean {
-    if (currentTab === 'awaiting-sig') {
-      const awaitingStep = p.chain.find((s) => s.status === 'awaiting')
-      if (profile.roleKey === 'manager') return awaitingStep?.role === 'Manager'
-      if (profile.roleKey === 'cfo')     return awaitingStep?.role === 'CFO'
-      if (profile.roleKey === 'finance') return false
-      // auditor sees all
-      return true
-    }
-    return true
-  }
-
   const visible = sortPayments(
-    PAYMENTS
-      .filter((p) => tabFilter(p, tab))
-      .filter((p) => tab === 'awaiting-sig' ? roleFilter(p, tab) : true)
+    getTabPayments(PAYMENTS, tab, profile.roleKey)
       .filter((p) => payeeFilter === '' || p.payee.toLowerCase().includes(payeeFilter.toLowerCase()))
       .filter((p) => statusFilter === '' || p.status === statusFilter)
   )
@@ -555,11 +581,25 @@ export default function Approvals() {
       </button>
     )
 
-    if (p.status === 'awaiting-sig') {
+    // Manager/CFO see pending-manager bills in their "Awaiting Sig" tab — show Sign button
+    if (p.status === 'pending-manager') {
       const awaitingStep = p.chain.find((s) => s.status === 'awaiting')
       const canSign =
         (profile.roleKey === 'manager' && awaitingStep?.role === 'Manager') ||
         (profile.roleKey === 'cfo' && awaitingStep?.role === 'CFO')
+      if (canSign) return (
+        <button
+          onClick={(e) => { e.stopPropagation(); setSelected(p) }}
+          className="px-3 py-1 rounded-lg bg-orange-500 hover:bg-orange-600 text-white text-xs font-semibold transition-colors"
+        >
+          Sign
+        </button>
+      )
+    }
+
+    // Finance sees awaiting-sig (on-chain signing)
+    if (p.status === 'awaiting-sig') {
+      const canSign = profile.roleKey === 'finance'
       if (canSign) return (
         <button
           onClick={(e) => { e.stopPropagation(); setSelected(p) }}
@@ -622,10 +662,10 @@ export default function Approvals() {
         </button>
       </div>
 
-      {/* Tabs */}
+      {/* Tabs — Auditor only sees Paid */}
       <div className="flex items-center border-b border-gray-100 dark:border-white/[0.08]">
         <div role="tablist" className="flex items-center overflow-x-auto">
-          {TABS.map(({ key, label }) => {
+          {TABS.filter(({ key }) => profile.roleKey === 'auditor' ? key === 'paid' : true).map(({ key, label }) => {
             const badge = key === 'awaiting-sig' ? awaitingCount : key === 'pending' ? pendingCount : 0
             return (
               <button
