@@ -827,7 +827,7 @@ export default function Approvals() {
         <div className="modal-backdrop" onClick={(e) => e.target === e.currentTarget && setNewBillOpen(false)}>
           <div className="modal-box w-full max-w-lg" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-gray-100 dark:border-white/[0.06]">
-              <h3 className="font-grotesk font-semibold text-base text-gray-900 dark:text-white">New Payment Request</h3>
+              <h3 className="font-grotesk font-semibold text-base text-gray-900 dark:text-white">New Bill</h3>
               <button onClick={() => setNewBillOpen(false)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors">
                 <X className="w-4 h-4" />
               </button>

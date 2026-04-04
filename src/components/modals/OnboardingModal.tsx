@@ -167,8 +167,7 @@ export function OnboardingModal() {
                 <p className="font-semibold mb-1">We track balances and transactions for the following tokens:</p>
                 <ul className="space-y-0.5">
                   <li>• USDC · Ethereum &nbsp;&nbsp; • USDC · Polygon</li>
-                  <li>• USDT · Ethereum &nbsp;&nbsp; • USDT · Tron</li>
-                  <li>• USDC · Solana</li>
+                  <li>• USDC · Solana &nbsp;&nbsp;&nbsp;&nbsp; • USDT · Tron</li>
                 </ul>
                 <p className="mt-2 text-blue-600 dark:text-blue-400">Make sure your wallet address holds one or more of these tokens.</p>
               </div>

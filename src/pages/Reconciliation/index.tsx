@@ -4,7 +4,7 @@ import {
   Upload, RefreshCw, Download, AlertCircle,
   ChevronRight, Repeat2, Search, FileQuestion,
   SearchX, CheckCircle2, Zap, Clock,
-  ArrowDown, ArrowUp,
+  ArrowDown, ArrowUp, X, Send, Users, Paperclip,
 } from 'lucide-react'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
@@ -557,12 +557,58 @@ function TransactionsTab() {
 }
 
 // ── Main page ────────────────────────────────────────────────────────────────
+// ── Currency+Network options (shared with Approvals) ─────────────────────────
+const CN_OPTIONS = [
+  { value: 'USDC·ETH', label: 'USDC · Ethereum' },
+  { value: 'USDC·POL', label: 'USDC · Polygon' },
+  { value: 'USDC·SOL', label: 'USDC · Solana' },
+  { value: 'USDT·TRX', label: 'USDT · Tron' },
+]
+
+const POOL_BALANCES: Record<string, number> = {
+  'USDC·ETH': 250000, 'USDC·POL': 100000, 'USDC·SOL': 65000, 'USDT·TRX': 85000,
+}
+
+function getPolicyTier(amount: number): 1 | 2 | 3 {
+  if (amount < 1000) return 1
+  if (amount <= 50000) return 2
+  return 3
+}
+
 export default function Reconciliation() {
   const { t } = useTranslation()
   const [activeTab, setActiveTab] = useState<Tab>('reconcile')
   const { openModal, showToast } = useUiStore()
 
+  // ── New Bill modal state ──────────────────────────────────────────────────
+  const [billModalOpen, setBillModalOpen] = useState(false)
+  const [billMode, setBillMode] = useState<'upload' | 'create'>('upload')
+  const [nbVendor,   setNbVendor]   = useState('')
+  const [nbWallet,   setNbWallet]   = useState('')
+  const [nbAmount,   setNbAmount]   = useState('')
+  const [nbCN,       setNbCN]       = useState('USDC·ETH')
+  const [nbPurpose,  setNbPurpose]  = useState('')
+  const [nbDeadline, setNbDeadline] = useState('')
+
+  const parsedAmount = parseFloat(nbAmount) || 0
+  const policyTier   = getPolicyTier(parsedAmount)
+  const walletOk     = nbWallet.trim().length >= 10 &&
+    (nbWallet.trim().startsWith('0x') || nbWallet.trim().startsWith('T'))
+  const poolBalance  = POOL_BALANCES[nbCN] ?? 0
+  const liquidityOk  = parsedAmount > 0 && parsedAmount <= poolBalance
+
+  function closeBillModal() {
+    setBillModalOpen(false)
+    setBillMode('upload')
+    setNbVendor(''); setNbWallet(''); setNbAmount('')
+    setNbCN('USDC·ETH'); setNbPurpose(''); setNbDeadline('')
+  }
+
+  const inputCls = 'w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-white/[0.03] text-sm text-gray-800 dark:text-gray-200 placeholder-gray-400 focus:outline-none focus:border-orange-400 transition-colors'
+  const labelCls = 'block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1'
+
   return (
+    <>
     <div className="p-6 space-y-5">
 
       {/* Header */}
@@ -597,7 +643,7 @@ export default function Reconciliation() {
           </div>
           <ChevronRight className="w-4 h-4 text-gray-300 dark:text-gray-600 ml-auto shrink-0" />
         </Card>
-        <Card onClick={() => openModal('upload-bill')} className="p-4 flex items-center gap-3 hover:bg-violet-50/20 dark:hover:bg-violet-500/5 transition-colors cursor-pointer">
+        <Card onClick={() => setBillModalOpen(true)} className="p-4 flex items-center gap-3 hover:bg-violet-50/20 dark:hover:bg-violet-500/5 transition-colors cursor-pointer">
           <div className="w-9 h-9 rounded-lg bg-violet-50 dark:bg-violet-500/10 flex items-center justify-center shrink-0">
             <Upload className="w-4 h-4 text-violet-500" />
           </div>
@@ -655,5 +701,168 @@ export default function Reconciliation() {
       </div>
 
     </div>
-  )
+    {/* ── Add Bill modal ──────────────────────────────────────────────────── */}
+    {billModalOpen && (
+      <div className="modal-backdrop" onClick={(e) => e.target === e.currentTarget && closeBillModal()}>
+        <div className="modal-box w-full max-w-lg" onClick={(e) => e.stopPropagation()}>
+
+          {/* Header */}
+          <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-gray-100 dark:border-white/[0.06]">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-violet-50 dark:bg-violet-500/10 flex items-center justify-center shrink-0">
+                <Upload className="w-3.5 h-3.5 text-violet-500" />
+              </div>
+              <h3 className="font-grotesk font-semibold text-base text-gray-900 dark:text-white">New Bill</h3>
+            </div>
+            <button onClick={closeBillModal} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Toggle */}
+          <div className="px-5 pt-4">
+            <div className="flex items-center gap-1 p-1 bg-gray-100 dark:bg-white/[0.06] rounded-lg w-fit">
+              <button
+                onClick={() => setBillMode('upload')}
+                className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${billMode === 'upload' ? 'bg-white dark:bg-[#1a1d27] text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'}`}
+              >
+                Upload Bill
+              </button>
+              <button
+                onClick={() => setBillMode('create')}
+                className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${billMode === 'create' ? 'bg-white dark:bg-[#1a1d27] text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'}`}
+              >
+                Create New
+              </button>
+            </div>
+          </div>
+
+          {/* Content */}
+          <div className="p-5 max-h-[65vh] overflow-y-auto space-y-4">
+
+            {billMode === 'upload' && (
+              <>
+                <div className="bg-violet-50 dark:bg-violet-500/[0.08] border border-violet-100 dark:border-violet-500/20 rounded-lg p-3 text-xs text-violet-700 dark:text-violet-300">
+                  <p className="font-semibold mb-1">Upload a bill from outside Orgstar</p>
+                  <p className="leading-relaxed text-violet-600/80 dark:text-violet-400/80">
+                    Use this option if you have a bill that was issued or created outside of Orgstar — for example, a vendor invoice received by email, a PDF from your supplier, or an ERP export. Uploading it here lets Orgstar match it against on-chain transactions for reconciliation.
+                  </p>
+                </div>
+                <div>
+                  <p className={labelCls}>Bill File <span className="text-red-400">*</span></p>
+                  <div className="border-2 border-dashed border-gray-200 dark:border-white/10 rounded-lg p-6 flex flex-col items-center gap-2 cursor-pointer hover:border-violet-300 dark:hover:border-violet-500/40 transition-colors">
+                    <Upload className="w-6 h-6 text-gray-300 dark:text-gray-600" />
+                    <p className="text-sm text-gray-400">Drop PDF, image, or CSV here</p>
+                    <p className="text-xs text-gray-300 dark:text-gray-600">or click to browse</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className={labelCls}>Vendor</label>
+                    <input placeholder="e.g. AWS Services" className={inputCls} />
+                  </div>
+                  <div>
+                    <label className={labelCls}>Reference No.</label>
+                    <input placeholder="PAY-2026…" className={inputCls} />
+                  </div>
+                </div>
+                <div className="flex items-center justify-end gap-2 pt-2 border-t border-gray-100 dark:border-white/[0.06]">
+                  <button onClick={closeBillModal} className="px-4 py-2 rounded-lg border border-gray-200 dark:border-white/10 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">Cancel</button>
+                  <button
+                    onClick={() => { showToast('Bill uploaded successfully', 'success'); closeBillModal() }}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-violet-500 hover:bg-violet-600 text-white text-sm font-semibold transition-colors"
+                  >
+                    <Upload className="w-3.5 h-3.5" /> Upload Bill
+                  </button>
+                </div>
+              </>
+            )}
+
+            {billMode === 'create' && (
+              <>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Create a new bill directly in Orgstar. It will enter the approval workflow based on the amount.</p>
+                <div>
+                  <label className={labelCls}>Vendor <span className="text-red-400">*</span></label>
+                  <input value={nbVendor} onChange={(e) => setNbVendor(e.target.value)} placeholder="e.g. AWS Services" className={inputCls} />
+                </div>
+                <div>
+                  <label className={labelCls}>Wallet Address <span className="text-red-400">*</span></label>
+                  <input value={nbWallet} onChange={(e) => setNbWallet(e.target.value)} placeholder="0x… or TQ…" className={`${inputCls} font-mono`} />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className={labelCls}>Amount <span className="text-red-400">*</span></label>
+                    <input type="number" min="0" value={nbAmount} onChange={(e) => setNbAmount(e.target.value)} placeholder="0" className={inputCls} />
+                  </div>
+                  <div>
+                    <label className={labelCls}>Currency & Network <span className="text-red-400">*</span></label>
+                    <select value={nbCN} onChange={(e) => setNbCN(e.target.value)} className={inputCls}>
+                      {CN_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                    </select>
+                  </div>
+                </div>
+                <div>
+                  <label className={labelCls}>Purpose / Description</label>
+                  <input value={nbPurpose} onChange={(e) => setNbPurpose(e.target.value)} placeholder="e.g. Raw Materials" className={inputCls} />
+                </div>
+                <div>
+                  <label className={labelCls}>Payment Deadline <span className="text-[10px] font-normal text-gray-400">(optional — prioritises in approver queue)</span></label>
+                  <input type="date" value={nbDeadline} onChange={(e) => setNbDeadline(e.target.value)} className={inputCls} />
+                </div>
+
+                {/* Policy Engine Preview */}
+                <div className="rounded-lg border border-gray-100 dark:border-white/[0.08] bg-gray-50/60 dark:bg-white/[0.03] p-3">
+                  <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-2">Policy Engine Preview</p>
+                  <div className="flex items-center gap-2 flex-wrap mb-1.5">
+                    {walletOk
+                      ? <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"><CheckCircle2 className="w-3 h-3" /> KYT Pass</span>
+                      : <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-gray-100 dark:bg-white/[0.07] text-gray-400"><Clock className="w-3 h-3" /> KYT Pending</span>
+                    }
+                    {parsedAmount === 0
+                      ? <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-gray-100 dark:bg-white/[0.07] text-gray-400"><Clock className="w-3 h-3" /> Liquidity —</span>
+                      : liquidityOk
+                        ? <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"><CheckCircle2 className="w-3 h-3" /> Liquidity OK</span>
+                        : <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-red-50 dark:bg-red-500/10 text-red-600"><Zap className="w-3 h-3" /> Insufficient Funds</span>
+                    }
+                    {policyTier === 1 && <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"><CheckCircle2 className="w-3 h-3" /> DoA: Auto Execute</span>}
+                    {policyTier === 2 && <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400"><Users className="w-3 h-3" /> DoA: Manager Approval</span>}
+                    {policyTier === 3 && <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-orange-50 dark:bg-orange-500/10 text-orange-700 dark:text-orange-400"><Users className="w-3 h-3" /> DoA: Manager + CFO</span>}
+                  </div>
+                  <p className="text-[11px] text-gray-400">
+                    {!walletOk && 'Enter a wallet address to run KYT screening. '}
+                    {parsedAmount > 0 && !liquidityOk && `Insufficient balance — pool holds ${poolBalance.toLocaleString()} ${nbCN.split('·')[0]}. `}
+                    {walletOk && liquidityOk && policyTier === 1 && 'Amount < $1,000 — no approval required, will execute immediately.'}
+                    {walletOk && liquidityOk && policyTier === 2 && 'Amount $1k–$50k — requires one-level manager approval before execution.'}
+                    {walletOk && liquidityOk && policyTier === 3 && 'Amount > $50,000 — requires dual approval from Manager and CFO.'}
+                  </p>
+                </div>
+
+                {/* Attach Documents */}
+                <div>
+                  <p className={labelCls}>Attach Documents <span className="normal-case font-normal text-gray-400">(optional)</span></p>
+                  <div className="border-2 border-dashed border-gray-200 dark:border-white/10 rounded-lg p-4 flex flex-col items-center gap-1.5 text-center cursor-pointer hover:border-violet-300 dark:hover:border-violet-500/40 transition-colors">
+                    <Paperclip className="w-4 h-4 text-gray-300 dark:text-gray-600" />
+                    <p className="text-xs text-gray-400">Attach invoice, contract, PO, receipt</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-end gap-2 pt-2 border-t border-gray-100 dark:border-white/[0.06]">
+                  <button onClick={closeBillModal} className="px-4 py-2 rounded-lg border border-gray-200 dark:border-white/10 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">Cancel</button>
+                  <button
+                    onClick={() => { showToast('Bill submitted for approval', 'success'); closeBillModal() }}
+                    disabled={!nbVendor.trim() || !walletOk || !liquidityOk}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-orange-500 hover:bg-orange-600 disabled:opacity-50 text-white text-sm font-semibold transition-colors"
+                  >
+                    <Send className="w-3.5 h-3.5" />
+                    {policyTier === 1 ? 'Submit Payment' : 'Submit for Approval'}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    )}
+    </>
+  ) // end return
 }
