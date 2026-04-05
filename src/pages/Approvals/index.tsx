@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
 import {
   CheckCircle2, XCircle, Clock, AlertTriangle, Copy,
   PenLine, Plus, Calendar, ChevronUp, ChevronDown as ChevronDownIcon, X,
@@ -516,6 +517,7 @@ function getPolicyTier(amount: number): 1 | 2 | 3 {
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 export default function Approvals() {
+  const location = useLocation()
   const [tab,      setTab]      = useState<TabKey>('all')
   const [sortCol,  setSortCol]  = useState<SortCol>('created')
   const [sortDir,  setSortDir]  = useState<'asc' | 'desc'>('desc')
@@ -534,6 +536,17 @@ export default function Approvals() {
 
   const { showToast } = useUiStore()
   const { profile } = useUserStore()
+
+  // Auto-open drawer when navigated from Dashboard
+  useEffect(() => {
+    const ref = (location.state as { openPaymentRef?: string } | null)?.openPaymentRef
+    if (ref) {
+      const p = PAYMENTS.find((x) => x.ref === ref)
+      if (p) setSelected(p)
+      // Clear state so back-navigation doesn't re-open
+      window.history.replaceState({}, '')
+    }
+  }, [location.state])
 
   const awaitingCount = getTabPayments(PAYMENTS, 'awaiting-sig', profile.roleKey).length
   const pendingCount  = getTabPayments(PAYMENTS, 'pending', profile.roleKey).length
