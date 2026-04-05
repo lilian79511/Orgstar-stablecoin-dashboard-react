@@ -82,14 +82,14 @@ const PAYMENTS: Payment[] = [
   },
   {
     id: 'p4', ref: 'PAY-20260313-004', payee: 'SaaS Corp', amount: 5000, currency: 'USDT',
-    purpose: 'Annual Subscription', status: 'awaiting-sig',
+    purpose: 'Annual Subscription', status: 'paid',
     deadline: 'Mar 18, 2026', deadlineExpired: false,
     createdDate: 'Mar 13, 2026', createdTime: '11:15', createdBy: 'Lillian Chen',
     toAddress: '0x2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c',
     policyKyt: true, policyLiquidity: true, policyDoa: 'Manager',
     chain: [
       { role: 'Finance Specialist', status: 'approved', name: 'Lillian Chen',   date: 'Mar 13 · 11:15', note: 'Submitted for approval' },
-      { role: 'Manager',            status: 'approved', name: '王大明', date: 'Mar 14 · 09:00', note: 'Approved' },
+      { role: 'Manager',            status: 'approved', name: '王大明', date: 'Mar 14 · 09:00', note: 'Approved — payment executed' },
       { role: 'CFO',                status: 'queued',   name: '李財長',                              note: 'Not required for this amount' },
     ],
   },
@@ -231,7 +231,7 @@ function ChainStep({ step, isLast }: { step: ApprovalStep; isLast: boolean }) {
 }
 
 // ── Detail Drawer ────────────────────────────────────────────────────────────
-function PaymentDrawer({ payment, onClose }: { payment: Payment | null; onClose: () => void }) {
+function PaymentDrawer({ payment, onClose, roleKey }: { payment: Payment | null; onClose: () => void; roleKey: string }) {
   const { showToast } = useUiStore()
   const [comment, setComment] = useState('')
   const [confirmOpen, setConfirmOpen] = useState(false)
@@ -352,75 +352,86 @@ function PaymentDrawer({ payment, onClose }: { payment: Payment | null; onClose:
         </div>
       )}
 
-      {/* ── Footer: awaiting-sig actions ── */}
-      {isAwaitingSig && (
-        <div className="sticky bottom-0 bg-white dark:bg-[#1a1d27] border-t border-gray-100 dark:border-white/[0.06] pt-4 -mx-6 px-6 pb-1">
-          <textarea
-            value={comment}
-            onChange={(e) => setComment(e.target.value)}
-            placeholder="Add a comment (optional)…"
-            rows={2}
-            className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-white/[0.03] text-sm text-gray-800 dark:text-gray-200 placeholder-gray-400 focus:outline-none focus:border-orange-400 transition-colors resize-none mb-3"
-          />
-          <div className="flex gap-2 mb-4">
-            <button
-              onClick={handleReject}
-              className="flex-1 py-2.5 rounded-xl border border-red-200 dark:border-red-500/30 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/5 transition-colors"
-            >
-              Reject
-            </button>
-            <button
-              onClick={() => setConfirmOpen(true)}
-              className="flex-1 py-2.5 rounded-xl bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold transition-colors"
-            >
-              Approve
-            </button>
-          </div>
+      {/* ── Footer: role-aware actions ── */}
+      {(() => {
+        const isMyTurn =
+          (roleKey === 'manager' && awaitingStep?.role === 'Manager') ||
+          (roleKey === 'cfo'     && awaitingStep?.role === 'CFO')
 
-          {/* Confirm modal */}
-          {confirmOpen && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-              <div className="bg-white dark:bg-[#1a1d27] rounded-2xl shadow-xl w-full max-w-sm mx-4 p-6">
-                <h4 className="font-grotesk font-semibold text-base text-gray-900 dark:text-white mb-2">Confirm Approval</h4>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Are you sure you want to approve this payment?</p>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">Once approved, this transaction will be sent to <strong className="text-gray-800 dark:text-gray-200">{payment.payee}</strong>.</p>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setConfirmOpen(false)}
-                    className="flex-1 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleApproveConfirm}
-                    className="flex-1 py-2.5 rounded-xl bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold transition-colors"
-                  >
-                    Confirm &amp; Approve →
-                  </button>
-                </div>
+        // Finance: read-only — show what's happening
+        if (roleKey === 'finance') {
+          const msg = isAwaitingSig
+            ? 'All approvals complete. Payment is executing on-chain.'
+            : awaitingStep
+            ? `Submitted — awaiting approval from ${awaitingStep.name} (${awaitingStep.role}).`
+            : null
+          if (!msg) return null
+          return (
+            <div className="sticky bottom-0 bg-white dark:bg-[#1a1d27] border-t border-gray-100 dark:border-white/[0.06] pt-4 -mx-6 px-6 pb-1">
+              <div className="flex items-start gap-2 p-3 rounded-lg bg-blue-50 dark:bg-blue-500/[0.08] border border-blue-100 dark:border-blue-500/20 mb-4">
+                <Clock className="w-3.5 h-3.5 text-blue-500 shrink-0 mt-0.5" />
+                <p className="text-[11px] text-blue-700 dark:text-blue-400 leading-relaxed">{msg}</p>
               </div>
+              <button onClick={onClose} className="w-full py-2.5 rounded-xl border border-gray-200 dark:border-white/10 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors mb-4">
+                Close
+              </button>
             </div>
-          )}
-        </div>
-      )}
+          )
+        }
 
-      {/* ── Footer notice for pending-manager ── */}
-      {!isAwaitingSig && awaitingStep && (
-        <div className="sticky bottom-0 bg-white dark:bg-[#1a1d27] border-t border-gray-100 dark:border-white/[0.06] pt-4 -mx-6 px-6 pb-1">
-          <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-50 dark:bg-amber-500/[0.08] border border-amber-100 dark:border-amber-500/20 mb-4">
-            <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />
-            <p className="text-[11px] text-amber-700 dark:text-amber-400 leading-relaxed">
-              Awaiting action from <strong>{awaitingStep.name}</strong> ({awaitingStep.role}). You can review details but cannot sign on their behalf.
-            </p>
-          </div>
-          <button
-            onClick={onClose}
-            className="w-full py-2.5 rounded-xl border border-gray-200 dark:border-white/10 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
-          >
-            Close
-          </button>
-        </div>
-      )}
+        // Manager/CFO: it's their turn — show Approve + Reject
+        if (isMyTurn || isAwaitingSig) {
+          return (
+            <div className="sticky bottom-0 bg-white dark:bg-[#1a1d27] border-t border-gray-100 dark:border-white/[0.06] pt-4 -mx-6 px-6 pb-1">
+              <textarea
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                placeholder="Add a comment (optional)…"
+                rows={2}
+                className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-white/[0.03] text-sm text-gray-800 dark:text-gray-200 placeholder-gray-400 focus:outline-none focus:border-orange-400 transition-colors resize-none mb-3"
+              />
+              <div className="flex gap-2 mb-4">
+                <button onClick={handleReject} className="flex-1 py-2.5 rounded-xl border border-red-200 dark:border-red-500/30 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/5 transition-colors">
+                  Reject
+                </button>
+                <button onClick={() => setConfirmOpen(true)} className="flex-1 py-2.5 rounded-xl bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold transition-colors">
+                  Approve
+                </button>
+              </div>
+              {confirmOpen && (
+                <div className="fixed inset-0 z-[700] flex items-center justify-center bg-black/40">
+                  <div className="bg-white dark:bg-[#1a1d27] rounded-2xl shadow-xl w-full max-w-sm mx-4 p-6">
+                    <h4 className="font-grotesk font-semibold text-base text-gray-900 dark:text-white mb-2">Confirm Approval</h4>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Are you sure you want to approve this payment?</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">Once approved, this transaction will be sent to <strong className="text-gray-800 dark:text-gray-200">{payment.payee}</strong>.</p>
+                    <div className="flex gap-2">
+                      <button onClick={() => setConfirmOpen(false)} className="flex-1 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">Cancel</button>
+                      <button onClick={handleApproveConfirm} className="flex-1 py-2.5 rounded-xl bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold transition-colors">Confirm & Approve →</button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )
+        }
+
+        // Manager/CFO: not their turn (another approver is pending)
+        if (awaitingStep) {
+          return (
+            <div className="sticky bottom-0 bg-white dark:bg-[#1a1d27] border-t border-gray-100 dark:border-white/[0.06] pt-4 -mx-6 px-6 pb-1">
+              <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-50 dark:bg-amber-500/[0.08] border border-amber-100 dark:border-amber-500/20 mb-4">
+                <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />
+                <p className="text-[11px] text-amber-700 dark:text-amber-400 leading-relaxed">
+                  Awaiting action from <strong>{awaitingStep.name}</strong> ({awaitingStep.role}).
+                </p>
+              </div>
+              <button onClick={onClose} className="w-full py-2.5 rounded-xl border border-gray-200 dark:border-white/10 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors mb-4">Close</button>
+            </div>
+          )
+        }
+
+        return null
+      })()}
     </Drawer>
   )
 }
@@ -449,8 +460,8 @@ function getTabPayments(payments: Payment[], tab: TabKey, roleKey: string): Paym
 
   switch (tab) {
     case 'all':
-      // Finance sees everything; others see their relevant subset
-      if (roleKey === 'finance') return payments.filter((p) => p.status !== 'rejected' ? true : true)
+      // Finance never sees awaiting-sig (on-chain multi-sig is backend, not Finance's action)
+      if (roleKey === 'finance') return payments.filter((p) => p.status !== 'awaiting-sig')
       return payments
 
     case 'awaiting-sig':
@@ -467,8 +478,8 @@ function getTabPayments(payments: Payment[], tab: TabKey, roleKey: string): Paym
       return []
 
     case 'pending':
-      // Finance: bills they submitted that are still in flight (pending approval or awaiting on-chain sig)
-      if (roleKey === 'finance') return payments.filter((p) => p.status === 'pending-manager' || p.status === 'awaiting-sig')
+      // Finance: bills waiting for Manager/CFO approval — never show awaiting-sig to Finance
+      if (roleKey === 'finance') return payments.filter((p) => p.status === 'pending-manager')
       // Manager: pending-manager bills where it is NOT Manager's turn (waiting for CFO etc.)
       if (roleKey === 'manager') return payments.filter(
         (p) => p.status === 'pending-manager' && awaitingRole(p) !== 'Manager'
@@ -614,17 +625,8 @@ export default function Approvals() {
       )
     }
 
-    // Finance sees awaiting-sig (on-chain signing)
+    // awaiting-sig — Finance never sees these; other roles can view
     if (p.status === 'awaiting-sig') {
-      const canSign = profile.roleKey === 'finance'
-      if (canSign) return (
-        <button
-          onClick={(e) => { e.stopPropagation(); setSelected(p) }}
-          className="px-3 py-1 rounded-lg bg-orange-500 hover:bg-orange-600 text-white text-xs font-semibold transition-colors"
-        >
-          Sign
-        </button>
-      )
       return (
         <button
           onClick={(e) => { e.stopPropagation(); setSelected(p) }}
@@ -821,7 +823,7 @@ export default function Approvals() {
 
       {/* Detail drawer */}
       {selected && (
-        <PaymentDrawer payment={selected} onClose={() => setSelected(null)} />
+        <PaymentDrawer payment={selected} onClose={() => setSelected(null)} roleKey={profile.roleKey} />
       )}
 
       {/* New Bill modal */}
