@@ -679,10 +679,13 @@ export default function Approvals() {
         </button>
       </div>
 
-      {/* Tabs — Auditor only sees Paid */}
-      <div className="flex items-center border-b border-gray-100 dark:border-white/[0.08]">
-        <div role="tablist" className="flex items-center overflow-x-auto">
-          {TABS.filter(({ key }) => profile.roleKey === 'auditor' ? key === 'paid' : true).map(({ key, label }) => {
+      {/* Tabs */}
+      <div role="tablist" className="flex items-center border-b border-gray-100 dark:border-white/[0.08] overflow-x-auto">
+          {TABS.filter(({ key }) => {
+            if (profile.roleKey === 'auditor') return key === 'paid'
+            if (profile.roleKey === 'finance') return key !== 'awaiting-sig'
+            return true
+          }).map(({ key, label }) => {
             const badge = key === 'awaiting-sig' ? awaitingCount : key === 'pending' ? pendingCount : 0
             return (
               <button
@@ -707,7 +710,6 @@ export default function Approvals() {
               </button>
             )
           })}
-        </div>
       </div>
 
       {/* Filter row */}
