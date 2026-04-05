@@ -147,7 +147,7 @@
   .dark .filter-select::-webkit-calendar-picker-indicator { filter: invert(1); opacity: 0.35; cursor: pointer; }
 
   /* Modal */
-  .modal-backdrop { position: fixed; inset: 0; z-index: 60; display: flex; align-items: center; justify-content: center; padding: 1rem; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); }
+  .modal-backdrop { position: fixed; inset: 0; z-index: 600; display: flex; align-items: center; justify-content: center; padding: 1rem; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); }
   .modal-box { background: #fff; border-radius: 1rem; box-shadow: 0 25px 60px rgba(0,0,0,0.18); border: 1px solid rgba(0,0,0,0.06); overflow: hidden; }
   .dark .modal-box { background: #1a1d27; border-color: rgba(255,255,255,0.08); }
 

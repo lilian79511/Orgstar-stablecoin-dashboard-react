@@ -136,7 +136,7 @@ const PAYMENTS: Payment[] = [
 
 // ── Status config ─────────────────────────────────────────────────────────────
 const STATUS_CFG: Record<PayStatus, { label: string; cls: string; Icon: React.ElementType }> = {
-  'pending-manager': { label: 'Pending Manager', cls: 'bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400',       Icon: Clock },
+  'pending-manager': { label: 'Pending',         cls: 'bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400',       Icon: Clock },
   'awaiting-sig':    { label: 'Awaiting Sig.',   cls: 'bg-violet-50 dark:bg-violet-500/10 text-violet-700 dark:text-violet-400',   Icon: PenLine },
   'rejected':        { label: 'Rejected',        cls: 'bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-400',               Icon: XCircle },
   'paid':            { label: 'Paid',            cls: 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400', Icon: CheckCircle2 },
@@ -454,8 +454,8 @@ function getTabPayments(payments: Payment[], tab: TabKey, roleKey: string): Paym
       return payments
 
     case 'awaiting-sig':
-      // Finance: payments that completed human approval, now need on-chain sig
-      if (roleKey === 'finance') return payments.filter((p) => p.status === 'awaiting-sig')
+      // Finance: submitted the bills — nothing left to sign here; approvers handle it
+      if (roleKey === 'finance') return []
       // Manager: pending-manager bills where the next awaiting approver is Manager
       if (roleKey === 'manager') return payments.filter(
         (p) => p.status === 'pending-manager' && awaitingRole(p) === 'Manager'
@@ -467,8 +467,8 @@ function getTabPayments(payments: Payment[], tab: TabKey, roleKey: string): Paym
       return []
 
     case 'pending':
-      // Finance: all pending-manager (they submitted them, waiting for others)
-      if (roleKey === 'finance') return payments.filter((p) => p.status === 'pending-manager')
+      // Finance: bills they submitted that are still in flight (pending approval or awaiting on-chain sig)
+      if (roleKey === 'finance') return payments.filter((p) => p.status === 'pending-manager' || p.status === 'awaiting-sig')
       // Manager: pending-manager bills where it is NOT Manager's turn (waiting for CFO etc.)
       if (roleKey === 'manager') return payments.filter(
         (p) => p.status === 'pending-manager' && awaitingRole(p) !== 'Manager'
@@ -725,7 +725,7 @@ export default function Approvals() {
           className={inputCls}
         >
           <option value="">All Statuses</option>
-          <option value="pending-manager">Pending Manager</option>
+          <option value="pending-manager">Pending</option>
           <option value="awaiting-sig">Awaiting Signature</option>
           <option value="paid">Paid</option>
           <option value="rejected">Rejected</option>

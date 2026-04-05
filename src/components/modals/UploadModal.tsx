@@ -8,8 +8,12 @@ interface Props {
   type: 'invoice' | 'bill'
 }
 
-const CURRENCIES = ['USDC', 'USDT', 'DAI']
-const NETWORKS   = ['ETH', 'POL', 'SOL', 'TRX']
+const CN_OPTIONS = [
+  { value: 'USDC·ETH', label: 'USDC · Ethereum' },
+  { value: 'USDC·POL', label: 'USDC · Polygon'  },
+  { value: 'USDC·SOL', label: 'USDC · Solana'   },
+  { value: 'USDT·TRX', label: 'USDT · Tron'     },
+]
 
 export function UploadModal({ type }: Props) {
   const { activeModal, closeModal, showToast } = useUiStore()
@@ -23,8 +27,7 @@ export function UploadModal({ type }: Props) {
     counterparty: '',
     ref:          '',
     amount:       '',
-    currency:     'USDC',
-    network:      'ETH',
+    cn:           'USDC·ETH',
     date:         '',
     dueDate:      '',
     category:     '',
@@ -37,7 +40,7 @@ export function UploadModal({ type }: Props) {
 
   function onClose() {
     closeModal()
-    setForm({ counterparty: '', ref: '', amount: '', currency: 'USDC', network: 'ETH', date: '', dueDate: '', category: '', notes: '' })
+    setForm({ counterparty: '', ref: '', amount: '', cn: 'USDC·ETH', date: '', dueDate: '', category: '', notes: '' })
   }
 
   function handleSubmit() {
@@ -89,23 +92,17 @@ export function UploadModal({ type }: Props) {
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-3">
-          <div className="col-span-1">
+        <div className="grid grid-cols-2 gap-3">
+          <div>
             <label htmlFor={`${type}-amount`} className={labelCls}>Amount *</label>
             <input id={`${type}-amount`} aria-required="true" value={form.amount} onChange={(e) => set('amount', e.target.value)}
               placeholder="0.00" type="number" min="0"
               className={inputCls} />
           </div>
           <div>
-            <label htmlFor={`${type}-currency`} className={labelCls}>Currency</label>
-            <select id={`${type}-currency`} value={form.currency} onChange={(e) => set('currency', e.target.value)} className={inputCls}>
-              {CURRENCIES.map((c) => <option key={c}>{c}</option>)}
-            </select>
-          </div>
-          <div>
-            <label htmlFor={`${type}-network`} className={labelCls}>Network</label>
-            <select id={`${type}-network`} value={form.network} onChange={(e) => set('network', e.target.value)} className={inputCls}>
-              {NETWORKS.map((n) => <option key={n}>{n}</option>)}
+            <label htmlFor={`${type}-cn`} className={labelCls}>Currency · Network</label>
+            <select id={`${type}-cn`} value={form.cn} onChange={(e) => set('cn', e.target.value)} className={inputCls}>
+              {CN_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
             </select>
           </div>
         </div>
