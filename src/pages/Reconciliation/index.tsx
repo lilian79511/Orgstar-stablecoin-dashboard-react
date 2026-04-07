@@ -986,9 +986,17 @@ export default function Reconciliation() {
 
         {/* Orgstar balance */}
         <Card className="p-5 relative">
-          <button className="absolute top-4 right-4 text-gray-300 dark:text-gray-600 hover:text-gray-500 dark:hover:text-gray-400 transition-colors">
-            <Info className="w-4 h-4" />
-          </button>
+          <div className="absolute top-4 right-4 group">
+            <button className="w-6 h-6 rounded-full bg-orange-100 dark:bg-orange-500/20 text-orange-500 dark:text-orange-400 hover:bg-orange-200 dark:hover:bg-orange-500/30 transition-colors flex items-center justify-center">
+              <Info className="w-3.5 h-3.5" />
+            </button>
+            <div className="pointer-events-none absolute right-0 top-8 w-64 opacity-0 group-hover:opacity-100 transition-opacity duration-150 z-20">
+              <div className="bg-gray-900 dark:bg-gray-800 text-white text-xs rounded-xl px-3.5 py-3 shadow-xl leading-relaxed">
+                Balance recorded from Bills &amp; Invoices recorded in Orgstar plus the balance of the tracking wallet since the financial year.
+                <div className="absolute -top-1.5 right-2.5 w-3 h-3 bg-gray-900 dark:bg-gray-800 rotate-45" />
+              </div>
+            </div>
+          </div>
           <div className="text-center mb-4">
             <p className="font-grotesk font-bold text-3xl text-gray-900 dark:text-white">$500,000</p>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Orgstar balance</p>
