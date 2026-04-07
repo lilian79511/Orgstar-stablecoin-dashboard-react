@@ -5,7 +5,7 @@ import {
   ChevronRight, Repeat2, Search, FileQuestion,
   SearchX, CheckCircle2, Zap, Clock,
   ArrowDown, ArrowUp, X, Send, Users, Paperclip,
-  CheckCircle, BookOpen, FileText,
+  CheckCircle, BookOpen, FileText, Info,
 } from 'lucide-react'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
@@ -147,12 +147,19 @@ function ReconcileTab() {
   const [pairs, setPairs] = useState<Pair[]>(INITIAL_PAIRS)
   const { showToast } = useUiStore()
 
+  // Filter state
+  const [dirFilter, setDirFilter] = useState('all')
+  const [dateFrom,  setDateFrom]  = useState('')
+  const [dateTo,    setDateTo]    = useState('')
+  const [quickSel,  setQuickSel]  = useState('')
+  const [sortBy,    setSortBy]    = useState('date-desc')
+
   // Change picker modal
   const [changeModal, setChangeModal] = useState<{ pairId: string; mode: 'invoice' | 'bill' | 'tx'; currentRef: string } | null>(null)
 
   // Invoice / TX detail drawers
-  const [invDrawer, setInvDrawer]  = useState<{ type: 'invoice' | 'bill'; ref: string; party: string; sub: string; amount: string; currency: string } | null>(null)
-  const [txDrawer,  setTxDrawer]   = useState<{ hash: string; time: string; amount: string; currency: string; dir: 'received' | 'sent' } | null>(null)
+  const [invDrawer, setInvDrawer] = useState<{ type: 'invoice' | 'bill'; ref: string; party: string; sub: string; amount: string; currency: string } | null>(null)
+  const [txDrawer,  setTxDrawer]  = useState<{ hash: string; time: string; amount: string; currency: string; dir: 'received' | 'sent' } | null>(null)
 
   function confirm(id: string) {
     setPairs((prev) => prev.map((p) => p.id === id ? { ...p, status: 'confirmed' } : p))
@@ -165,22 +172,18 @@ function ReconcileTab() {
   function handleChangeSelect(ref: string) {
     if (!changeModal) return
     const { pairId, mode } = changeModal
-    // Actually update the pair data
     setPairs((prev) => prev.map((p) => {
       if (p.id !== pairId) return p
       if (mode === 'invoice') {
-        const d = INV_LOOKUP[ref]
-        if (!d) return p
+        const d = INV_LOOKUP[ref]; if (!d) return p
         return { ...p, doc: { type: 'invoice', ref, party: d.party, sub: d.sub, amount: d.amount, currency: d.currency, dir: 'received' }, status: 'suggested' }
       }
       if (mode === 'bill') {
-        const d = BILL_LOOKUP[ref]
-        if (!d) return p
+        const d = BILL_LOOKUP[ref]; if (!d) return p
         return { ...p, doc: { type: 'bill', ref, party: d.party, sub: d.sub, amount: d.amount, currency: d.currency, dir: 'sent' }, status: p.tx ? 'suggested' : 'awaiting' }
       }
       if (mode === 'tx') {
-        const d = TX_LOOKUP[ref]
-        if (!d) return p
+        const d = TX_LOOKUP[ref]; if (!d) return p
         return { ...p, tx: { hash: ref, time: d.time, amount: d.amount, currency: d.currency, dir: d.dir }, status: p.doc ? 'suggested' : 'no-doc' }
       }
       return p
@@ -189,160 +192,227 @@ function ReconcileTab() {
     setChangeModal(null)
   }
 
+  function clearFilters() {
+    setDateFrom(''); setDateTo(''); setQuickSel('')
+  }
+
+  const selectCls = 'h-8 px-2.5 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-white/[0.03] text-xs text-gray-700 dark:text-gray-300 focus:outline-none focus:border-orange-400 transition-colors'
+  const dateCls   = 'h-8 px-2.5 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-white/[0.03] text-xs text-gray-700 dark:text-gray-300 focus:outline-none focus:border-orange-400 transition-colors'
+
   return (
     <>
+      {/* ── Filter bar ── */}
+      <div className="flex items-center gap-2 flex-wrap mb-4">
+        <select value={dirFilter} onChange={(e) => setDirFilter(e.target.value)} className={selectCls}>
+          <option value="all">Transaction: Received &amp; Sent</option>
+          <option value="received">Received only</option>
+          <option value="sent">Sent only</option>
+        </select>
+
+        <div className="flex items-center gap-1.5">
+          <span className="text-[10px] uppercase tracking-widest font-semibold text-gray-400">Transaction Date</span>
+          <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className={dateCls} placeholder="dd/mm/yyyy" />
+          <span className="text-gray-400 text-xs">–</span>
+          <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className={dateCls} placeholder="dd/mm/yyyy" />
+        </div>
+
+        <select value={quickSel} onChange={(e) => setQuickSel(e.target.value)} className={selectCls}>
+          <option value="">Quick select…</option>
+          <option value="today">Today</option>
+          <option value="week">This week</option>
+          <option value="month">This month</option>
+        </select>
+
+        {(dateFrom || dateTo || quickSel) && (
+          <button onClick={clearFilters} className="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
+            Clear
+          </button>
+        )}
+
+        <div className="ml-auto">
+          <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className={selectCls}>
+            <option value="date-desc">Sort: Date ↓</option>
+            <option value="date-asc">Sort: Date ↑</option>
+            <option value="amount">Sort: Amount</option>
+          </select>
+        </div>
+      </div>
+
+      {/* ── Column headers ── */}
+      <div className="flex gap-3 mb-2 pr-[88px]">
+        <p className="flex-1 text-[10px] uppercase tracking-widest font-semibold text-gray-400 px-1">
+          Review your wallet transaction
+        </p>
+        <div className="w-8 shrink-0" />
+        <p className="flex-1 text-[10px] uppercase tracking-widest font-semibold text-gray-400 px-1">
+          Match with your transaction in Orgstar
+        </p>
+      </div>
+
+      {/* ── Pair cards ── */}
       <div className="space-y-3">
         {pairs.map((pair) => {
           const isConfirmed = pair.status === 'confirmed'
-          const docLabel = pair.doc?.type === 'bill' ? 'Bill (AP)' : 'Invoice (AR)'
-          const txLabel  = pair.doc?.dir === 'sent' || pair.tx?.dir === 'sent'
+          const docLabel    = pair.doc?.type === 'bill' ? 'Bill (AP)' : 'Invoice (AR)'
+          const txLabel     = pair.tx?.dir === 'sent' || pair.doc?.dir === 'sent'
             ? 'Transaction (Sent)' : 'Transaction (Received)'
-          const docMode  = pair.doc?.type === 'bill' ? 'bill' : 'invoice'
+          const docMode     = pair.doc?.type === 'bill' ? 'bill' : 'invoice'
+          const canMatch    = pair.status === 'suggested' || pair.status === 'discrepancy'
+
+          // Status bar colors
+          const statusBarCls =
+            isConfirmed             ? 'bg-emerald-50/60 dark:bg-emerald-500/[0.08] border-b border-emerald-100 dark:border-emerald-500/15'
+            : pair.status === 'suggested'   ? 'bg-blue-50/60 dark:bg-blue-500/[0.08] border-b border-blue-100 dark:border-blue-500/15'
+            : pair.status === 'discrepancy' ? 'bg-amber-50/60 dark:bg-amber-500/[0.08] border-b border-amber-100 dark:border-amber-500/15'
+            : 'bg-gray-50/60 dark:bg-white/[0.03] border-b border-gray-100 dark:border-white/[0.06]'
+
+          const cardBorderCls =
+            isConfirmed             ? 'border border-emerald-100 dark:border-emerald-500/20'
+            : pair.status === 'suggested'   ? 'border border-violet-100 dark:border-violet-500/15'
+            : pair.status === 'discrepancy' ? 'border border-amber-100 dark:border-amber-500/15'
+            : 'border border-gray-100 dark:border-white/[0.08]'
 
           return (
-            <div key={pair.id} className={`rounded-xl overflow-hidden bg-white dark:bg-[#1a1d27] ${isConfirmed ? 'opacity-60' : ''} ${pair.borderCls}`}>
+            <div key={pair.id} className={`flex items-stretch gap-3 ${isConfirmed ? 'opacity-60' : ''}`}>
 
-              {/* ── Two-panel body ── */}
-              <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-gray-50 dark:divide-white/5">
+              {/* ── Card ── */}
+              <div className={`flex-1 rounded-xl overflow-hidden bg-white dark:bg-[#1a1d27] ${cardBorderCls}`}>
 
-                {/* Left: Doc (invoice / bill) */}
-                {pair.doc ? (
-                  <div
-                    className="p-5 space-y-2 cursor-pointer hover:bg-orange-50/30 dark:hover:bg-orange-500/[0.04] transition-colors"
-                    onClick={() => setInvDrawer({ type: pair.doc!.type, ref: pair.doc!.ref, party: pair.doc!.party, sub: pair.doc!.sub, amount: pair.doc!.amount, currency: pair.doc!.currency })}
-                  >
-                    <div className="flex items-center justify-between mb-1">
-                      <p className="text-[10px] uppercase tracking-widest font-semibold text-gray-400">
-                        {docLabel} <span className="normal-case tracking-normal font-normal text-gray-300 dark:text-gray-600">· click to view</span>
-                      </p>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); openChangeDoc(pair.id, docMode, pair.doc!.ref) }}
-                        className="text-[10px] text-orange-500 hover:text-orange-600 font-medium flex items-center gap-0.5 transition-colors"
-                      >
-                        <Repeat2 className="w-3 h-3" /> Change
-                      </button>
-                    </div>
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <p className="text-[10px] font-mono text-gray-400">{pair.doc.ref}</p>
-                        <p className="text-sm font-semibold text-gray-900 dark:text-white mt-0.5">{pair.doc.party}</p>
-                        <p className="text-xs text-gray-400 mt-0.5">{pair.doc.sub}</p>
-                      </div>
-                      <p className={`text-sm font-semibold ${pair.doc.dir === 'sent' ? 'text-red-500 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
-                        {pair.doc.amount} <span className="font-normal text-gray-400 text-xs">{pair.doc.currency}</span>
-                      </p>
-                    </div>
-                  </div>
-                ) : (
-                  /* Left: no doc empty state */
-                  <div className="p-5 flex flex-col items-center justify-center min-h-[120px] text-center bg-gray-50/40 dark:bg-white/[0.03] space-y-3">
-                    <div className="w-9 h-9 rounded-full bg-gray-200/50 dark:bg-white/[0.07] flex items-center justify-center">
-                      <FileQuestion className="w-4 h-4 text-gray-400" />
-                    </div>
-                    <p className="text-xs text-gray-400">No invoice matched</p>
-                    <button
-                      onClick={() => openChangeDoc(pair.id, 'invoice', '')}
-                      className="px-3 py-1.5 rounded-lg bg-orange-500 hover:bg-orange-600 text-white text-xs font-semibold transition-colors flex items-center gap-1.5"
+                {/* Status bar — top */}
+                <div className={`px-4 py-2 flex items-center gap-2 ${statusBarCls}`}>
+                  {pair.status === 'suggested'   && <><CheckCircle2 className="w-3.5 h-3.5 text-blue-500 shrink-0" /><Pill cls="bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400"><Zap className="w-2.5 h-2.5" />Suggested Match</Pill></>}
+                  {pair.status === 'discrepancy' && <><AlertCircle className="w-3.5 h-3.5 text-amber-500 shrink-0" /><Pill cls="bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400">Discrepancy</Pill></>}
+                  {pair.status === 'no-doc'      && <><Search className="w-3.5 h-3.5 text-gray-400 shrink-0" /><Pill cls="bg-gray-200/50 dark:bg-white/[0.07] text-gray-500 dark:text-gray-400">No Invoice Found</Pill></>}
+                  {pair.status === 'no-tx'       && <><Clock className="w-3.5 h-3.5 text-gray-400 shrink-0" /><Pill cls="bg-gray-200/50 dark:bg-white/[0.07] text-gray-500 dark:text-gray-400">Awaiting Payment</Pill></>}
+                  {pair.status === 'awaiting'    && <><Search className="w-3.5 h-3.5 text-gray-400 shrink-0" /><Pill cls="bg-gray-200/50 dark:bg-white/[0.07] text-gray-500 dark:text-gray-400">No Transaction Found</Pill></>}
+                  {isConfirmed                   && <><CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" /><Pill cls="bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400">Confirmed</Pill></>}
+                  {!isConfirmed && <span className="text-[11px] text-gray-500 dark:text-gray-400 ml-0.5">{pair.note}</span>}
+                </div>
+
+                {/* Two panels: TX left · Doc right */}
+                <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr]">
+
+                  {/* Left: Transaction */}
+                  {pair.tx ? (
+                    <div
+                      className="p-4 cursor-pointer hover:bg-blue-50/20 dark:hover:bg-blue-500/[0.04] transition-colors"
+                      onClick={() => setTxDrawer({ hash: pair.tx!.hash, time: pair.tx!.time, amount: pair.tx!.amount, currency: pair.tx!.currency, dir: pair.tx!.dir })}
                     >
-                      <Search className="w-3 h-3" /> Find Invoice
-                    </button>
-                  </div>
-                )}
-
-                {/* Right: Transaction */}
-                {pair.tx ? (
-                  <div
-                    className="p-5 space-y-2 cursor-pointer hover:bg-blue-50/20 dark:hover:bg-blue-500/[0.04] transition-colors"
-                    onClick={() => setTxDrawer({ hash: pair.tx!.hash, time: pair.tx!.time, amount: pair.tx!.amount, currency: pair.tx!.currency, dir: pair.tx!.dir })}
-                  >
-                    <div className="flex items-center justify-between mb-1">
-                      <p className="text-[10px] uppercase tracking-widest font-semibold text-gray-400">
-                        {txLabel} <span className="normal-case tracking-normal font-normal text-gray-300 dark:text-gray-600">· click to view</span>
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="text-[10px] uppercase tracking-widest font-semibold text-gray-400">
+                          {txLabel} <span className="normal-case tracking-normal font-normal text-gray-300 dark:text-gray-600">· click to view</span>
+                        </p>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); openChangeDoc(pair.id, 'tx', pair.tx!.hash) }}
+                          className="text-[10px] text-orange-500 hover:text-orange-600 font-medium flex items-center gap-0.5 transition-colors"
+                        >
+                          <Repeat2 className="w-3 h-3" /> Change
+                        </button>
+                      </div>
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <p className="text-[11px] font-mono text-gray-500 dark:text-gray-400 truncate max-w-[180px]">{pair.tx.hash}</p>
+                          <p className="text-xs text-gray-400 mt-0.5">{pair.tx.time}</p>
+                        </div>
+                        <p className={`text-sm font-semibold ${
+                          pair.status === 'discrepancy' ? 'text-amber-600 dark:text-amber-400'
+                          : pair.tx.amount.startsWith('−') ? 'text-red-500 dark:text-red-400'
+                          : 'text-emerald-600 dark:text-emerald-400'
+                        }`}>
+                          {pair.tx.amount} <span className="font-normal text-gray-400 text-xs">{pair.tx.currency}</span>
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="p-4 flex flex-col items-center justify-center min-h-[100px] text-center bg-gray-50/40 dark:bg-white/[0.03] space-y-2">
+                      <div className="w-8 h-8 rounded-full bg-gray-200/50 dark:bg-white/[0.07] flex items-center justify-center">
+                        <SearchX className="w-3.5 h-3.5 text-gray-400" />
+                      </div>
+                      <p className="text-xs text-gray-400">
+                        {pair.doc?.dir === 'sent' ? 'No outgoing transaction linked' : 'No transaction detected'}
                       </p>
                       <button
-                        onClick={(e) => { e.stopPropagation(); openChangeDoc(pair.id, 'tx', pair.tx!.hash) }}
-                        className="text-[10px] text-orange-500 hover:text-orange-600 font-medium flex items-center gap-0.5 transition-colors"
+                        onClick={() => openChangeDoc(pair.id, 'tx', '')}
+                        className="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-white/10 text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors flex items-center gap-1.5"
                       >
-                        <Repeat2 className="w-3 h-3" /> Change
+                        <Search className="w-3 h-3" /> Find Transaction
                       </button>
                     </div>
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <p className="text-[11px] font-mono text-gray-500 dark:text-gray-400 truncate max-w-[200px]">{pair.tx.hash}</p>
-                      <p className="text-xs text-gray-400 mt-0.5">{pair.tx.time}</p>
+                  )}
+
+                  {/* Centre separator */}
+                  <div className="hidden md:flex items-center justify-center w-8 border-x border-gray-50 dark:border-white/5">
+                    <span className="text-gray-300 dark:text-gray-600 text-base leading-none">−</span>
+                  </div>
+
+                  {/* Right: Doc (Invoice / Bill) */}
+                  {pair.doc ? (
+                    <div
+                      className="p-4 cursor-pointer hover:bg-orange-50/30 dark:hover:bg-orange-500/[0.04] transition-colors"
+                      onClick={() => setInvDrawer({ type: pair.doc!.type, ref: pair.doc!.ref, party: pair.doc!.party, sub: pair.doc!.sub, amount: pair.doc!.amount, currency: pair.doc!.currency })}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="text-[10px] uppercase tracking-widest font-semibold text-gray-400">
+                          {docLabel} <span className="normal-case tracking-normal font-normal text-gray-300 dark:text-gray-600">· click to view</span>
+                        </p>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); openChangeDoc(pair.id, docMode, pair.doc!.ref) }}
+                          className="text-[10px] text-orange-500 hover:text-orange-600 font-medium flex items-center gap-0.5 transition-colors"
+                        >
+                          <Repeat2 className="w-3 h-3" /> Change
+                        </button>
+                      </div>
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <p className="text-[10px] font-mono text-gray-400">{pair.doc.ref}</p>
+                          <p className="text-sm font-semibold text-gray-900 dark:text-white mt-0.5">{pair.doc.party}</p>
+                          <p className="text-xs text-gray-400 mt-0.5">{pair.doc.sub}</p>
+                        </div>
+                        <p className={`text-sm font-semibold ${pair.doc.dir === 'sent' ? 'text-red-500 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
+                          {pair.doc.amount} <span className="font-normal text-gray-400 text-xs">{pair.doc.currency}</span>
+                        </p>
+                      </div>
                     </div>
-                    <p className={`text-sm font-semibold ${
-                      pair.status === 'discrepancy' ? 'text-amber-600 dark:text-amber-400'
-                      : pair.tx.amount.startsWith('−') ? 'text-red-500 dark:text-red-400'
-                      : 'text-emerald-600 dark:text-emerald-400'
-                    }`}>
-                      {pair.tx.amount} <span className="font-normal text-gray-400 text-xs">{pair.tx.currency}</span>
-                    </p>
-                  </div>
+                  ) : (
+                    <div className="p-4 flex flex-col items-center justify-center min-h-[100px] text-center bg-gray-50/40 dark:bg-white/[0.03] space-y-2">
+                      <div className="w-8 h-8 rounded-full bg-gray-200/50 dark:bg-white/[0.07] flex items-center justify-center">
+                        <FileQuestion className="w-3.5 h-3.5 text-gray-400" />
+                      </div>
+                      <p className="text-xs text-gray-400">No invoice matched</p>
+                      <button
+                        onClick={() => openChangeDoc(pair.id, 'invoice', '')}
+                        className="px-3 py-1.5 rounded-lg bg-orange-500 hover:bg-orange-600 text-white text-xs font-semibold transition-colors flex items-center gap-1.5"
+                      >
+                        <Search className="w-3 h-3" /> Find Invoice
+                      </button>
+                    </div>
+                  )}
                 </div>
-              ) : (
-                /* Right: no tx empty state */
-                <div className="p-5 flex flex-col items-center justify-center min-h-[120px] text-center bg-gray-50/40 dark:bg-white/[0.03] space-y-3">
-                  <div className="w-9 h-9 rounded-full bg-gray-200/50 dark:bg-white/[0.07] flex items-center justify-center">
-                    <SearchX className="w-4 h-4 text-gray-400" />
-                  </div>
-                  <p className="text-xs text-gray-400">
-                    {pair.doc?.dir === 'sent' ? 'No outgoing transaction linked' : 'No transaction detected'}
-                  </p>
-                  <button
-                    onClick={() => openChangeDoc(pair.id, 'tx', '')}
-                    className="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-white/10 text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors flex items-center gap-1.5"
-                  >
-                    <Search className="w-3 h-3" /> Find Transaction
-                  </button>
-                </div>
-              )}
               </div>
 
-              {/* ── Status bar ── */}
-            <div className={`px-5 py-3 flex items-center justify-between gap-3 ${pair.footerCls}`}>
-
-              {/* Left: status message */}
-              <p className={`text-[11px] flex items-center gap-1.5 ${
-                pair.status === 'discrepancy' ? 'text-amber-600 dark:text-amber-400'
-                : pair.status === 'suggested' || isConfirmed ? 'text-emerald-600 dark:text-emerald-400'
-                : 'text-gray-500 dark:text-gray-400'
-              }`}>
-                {pair.status === 'suggested' && <><CheckCircle2 className="w-3.5 h-3.5 shrink-0" /><Pill cls="bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400"><Zap className="w-2.5 h-2.5" />Suggested Match</Pill></>}
-                {pair.status === 'discrepancy' && <><AlertCircle className="w-3.5 h-3.5 shrink-0" /><Pill cls="bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400">Discrepancy</Pill></>}
-                {pair.status === 'no-doc' && <><Search className="w-3.5 h-3.5 shrink-0" /><Pill cls="bg-gray-200/50 dark:bg-white/[0.07] text-gray-500 dark:text-gray-400">No Invoice Found</Pill></>}
-                {pair.status === 'no-tx' && <><Clock className="w-3.5 h-3.5 shrink-0" /><Pill cls="bg-gray-200/50 dark:bg-white/[0.07] text-gray-500 dark:text-gray-400">Awaiting Payment</Pill></>}
-                {pair.status === 'awaiting' && <><Search className="w-3.5 h-3.5 shrink-0" /><Pill cls="bg-gray-200/50 dark:bg-white/[0.07] text-gray-500 dark:text-gray-400">No Transaction Found</Pill></>}
-                {isConfirmed && <><CheckCircle2 className="w-3.5 h-3.5 shrink-0" /><Pill cls="bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400">Confirmed</Pill></>}
-                {!isConfirmed && <span className="ml-1">{pair.note}</span>}
-              </p>
-
-              {/* Right: action button */}
-              {isConfirmed ? (
-                <span className="text-[11px] text-emerald-500 font-medium whitespace-nowrap">✓ Done</span>
-              ) : pair.status === 'suggested' ? (
-                <button
-                  onClick={() => confirm(pair.id)}
-                  className="px-3 py-1.5 rounded-lg bg-orange-500 hover:bg-orange-600 text-white text-xs font-semibold transition-colors flex items-center gap-1.5 whitespace-nowrap"
-                >
-                  <CheckCircle2 className="w-3 h-3" /> Confirm Match
-                </button>
-              ) : pair.status === 'discrepancy' ? (
-                <button
-                  onClick={() => confirm(pair.id)}
-                  className="px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold transition-colors flex items-center gap-1.5 whitespace-nowrap"
-                >
-                  <CheckCircle2 className="w-3 h-3" /> Confirm Partial
-                </button>
-              ) : (
-                <button
-                  disabled
-                  className="px-3 py-1.5 rounded-lg bg-gray-200 dark:bg-white/10 text-gray-400 text-xs font-semibold cursor-not-allowed whitespace-nowrap"
-                >
-                  Confirm Match
-                </button>
-              )}
-            </div>
+              {/* ── Match button — outside card ── */}
+              <div className="flex items-center shrink-0">
+                {isConfirmed ? (
+                  <div className="w-20 flex flex-col items-center justify-center gap-1">
+                    <CheckCircle className="w-4 h-4 text-emerald-500" />
+                    <span className="text-[11px] text-emerald-500 font-semibold">Done</span>
+                  </div>
+                ) : (
+                  <button
+                    disabled={!canMatch}
+                    onClick={() => confirm(pair.id)}
+                    className={`w-20 self-stretch rounded-xl text-sm font-semibold border-2 transition-colors ${
+                      canMatch
+                        ? pair.status === 'discrepancy'
+                          ? 'border-amber-400 text-amber-600 dark:text-amber-400 hover:bg-amber-500 hover:border-amber-500 hover:text-white'
+                          : 'border-orange-500 text-orange-600 dark:text-orange-400 hover:bg-orange-500 hover:border-orange-500 hover:text-white'
+                        : 'border-gray-200 dark:border-white/10 text-gray-300 dark:text-gray-600 cursor-not-allowed'
+                    }`}
+                  >
+                    Match
+                  </button>
+                )}
+              </div>
 
             </div>
           )
@@ -361,18 +431,10 @@ function ReconcileTab() {
       )}
 
       {/* Invoice / Bill detail drawer */}
-      <InvoiceDrawer
-        isOpen={invDrawer !== null}
-        onClose={() => setInvDrawer(null)}
-        data={invDrawer}
-      />
+      <InvoiceDrawer isOpen={invDrawer !== null} onClose={() => setInvDrawer(null)} data={invDrawer} />
 
       {/* Transaction detail drawer */}
-      <TxDrawer
-        isOpen={txDrawer !== null}
-        onClose={() => setTxDrawer(null)}
-        data={txDrawer}
-      />
+      <TxDrawer isOpen={txDrawer !== null} onClose={() => setTxDrawer(null)} data={txDrawer} />
     </>
   )
 }
@@ -901,42 +963,50 @@ export default function Reconciliation() {
         </div>
       </div>
 
-      {/* Action bar */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <Card onClick={() => openModal('upload-invoice')} className="p-4 flex items-center gap-3 hover:bg-orange-50/40 dark:hover:bg-orange-500/5 transition-colors cursor-pointer">
-          <div className="w-9 h-9 rounded-lg bg-orange-50 dark:bg-orange-500/10 flex items-center justify-center shrink-0">
-            <Upload className="w-4 h-4 text-orange-500" />
+      {/* Balance cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+        {/* Wallet balance */}
+        <Card className="p-5">
+          <div className="text-center mb-4">
+            <p className="font-grotesk font-bold text-3xl text-gray-900 dark:text-white">$500,000</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Wallet balance</p>
           </div>
-          <div>
-            <p className="text-xs font-semibold text-gray-800 dark:text-gray-200">{t('recon.uploadinvoice')}</p>
-            <p className="text-[10px] text-gray-400 mt-0.5">{t('recon.ar')}</p>
-          </div>
-          <ChevronRight className="w-4 h-4 text-gray-300 dark:text-gray-600 ml-auto shrink-0" />
-        </Card>
-        <Card onClick={() => setBillModalOpen(true)} className="p-4 flex items-center gap-3 hover:bg-violet-50/20 dark:hover:bg-violet-500/5 transition-colors cursor-pointer">
-          <div className="w-9 h-9 rounded-lg bg-violet-50 dark:bg-violet-500/10 flex items-center justify-center shrink-0">
-            <Upload className="w-4 h-4 text-violet-500" />
-          </div>
-          <div>
-            <p className="text-xs font-semibold text-gray-800 dark:text-gray-200">{t('recon.uploadbill')}</p>
-            <p className="text-[10px] text-gray-400 mt-0.5">{t('recon.ap')}</p>
-          </div>
-          <ChevronRight className="w-4 h-4 text-gray-300 dark:text-gray-600 ml-auto shrink-0" />
-        </Card>
-        <Card className="p-4 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center shrink-0">
-              <RefreshCw className="w-4 h-4 text-emerald-500" />
-            </div>
+          <div className="border-t border-gray-100 dark:border-white/[0.06] pt-3 flex items-center justify-between gap-3">
             <div>
-              <p className="text-xs font-semibold text-gray-800 dark:text-gray-200">{t('recon.lastsynced')}</p>
-              <p className="text-[10px] text-gray-400 mt-0.5">Mar 31, 2026 · 14:32 UTC</p>
+              <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">{t('recon.lastsynced')}</p>
+              <p className="text-[11px] font-medium text-gray-600 dark:text-gray-300 mt-0.5">Mar 31, 2026 · 14:32 UTC</p>
             </div>
+            <Button variant="secondary" size="sm" onClick={() => showToast('Synced successfully', 'success')}>
+              <RefreshCw className="w-3 h-3" />
+              {t('action.refresh')}
+            </Button>
           </div>
-          <Button variant="secondary" size="sm" onClick={() => showToast('Synced successfully', 'success')}>
-            <RefreshCw className="w-3 h-3" />
-            {t('action.refresh')}
-          </Button>
+        </Card>
+
+        {/* Orgstar balance */}
+        <Card className="p-5 relative">
+          <button className="absolute top-4 right-4 text-gray-300 dark:text-gray-600 hover:text-gray-500 dark:hover:text-gray-400 transition-colors">
+            <Info className="w-4 h-4" />
+          </button>
+          <div className="text-center mb-4">
+            <p className="font-grotesk font-bold text-3xl text-gray-900 dark:text-white">$500,000</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Orgstar balance</p>
+          </div>
+          <div className="border-t border-gray-100 dark:border-white/[0.06] pt-3 grid grid-cols-2 gap-2">
+            <button
+              onClick={() => openModal('upload-invoice')}
+              className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-gray-200 dark:border-white/10 text-xs font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
+            >
+              <Upload className="w-3.5 h-3.5" /> Upload Invoice
+            </button>
+            <button
+              onClick={() => setBillModalOpen(true)}
+              className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-gray-200 dark:border-white/10 text-xs font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
+            >
+              <Upload className="w-3.5 h-3.5" /> Upload Bill
+            </button>
+          </div>
         </Card>
       </div>
 
