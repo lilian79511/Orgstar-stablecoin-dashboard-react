@@ -8,6 +8,7 @@ import AuditTrail from '@/pages/AuditTrail'
 import TaxFiling from '@/pages/TaxFiling'
 import Whitelist from '@/pages/Whitelist'
 import ComingSoon from '@/pages/ComingSoon'
+import Settings from '@/pages/Settings'
 
 export default function App() {
   return (
@@ -24,6 +25,7 @@ export default function App() {
           <Route path="audit"          element={<AuditTrail />} />
           <Route path="tax"            element={<TaxFiling />} />
           <Route path="whitelist"      element={<Whitelist />} />
+          <Route path="settings"       element={<Settings />} />
         </Route>
       </Routes>
     </BrowserRouter>

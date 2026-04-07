@@ -9,7 +9,8 @@
     "audit": "Audit Trail",
     "tax": "Tax Filing",
     "whitelist": "Whitelist",
-    "comingsoon": "Coming Soon"
+    "comingsoon": "Coming Soon",
+    "settings": "Settings"
   },
   "page": {
     "overview": "Overview",

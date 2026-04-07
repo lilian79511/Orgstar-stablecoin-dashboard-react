@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import {
   GitCompareArrows, Wallet, Landmark, GitMerge, ArrowRight, Clock, AlertTriangle,
+  ArrowDown, ArrowUp,
 } from 'lucide-react'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
@@ -35,6 +36,25 @@ const chartMonths = [
   { label: 'Feb', inPct: 100, outPct: 0,    inLabel: '+12.2k', outLabel: null },
   { label: 'Mar', inPct: 0,   outPct: 100,  inLabel: null,     outLabel: '−2.1k' },
 ]
+
+// ── Recent Transactions ───────────────────────────────────────────────────────
+const recentTxRows = [
+  { hash: '0x5e6f…1e2f', party: 'Acme Corp',        amount: '+5,000',  currency: 'USDC', date: 'Mar 18', status: 'matched',   dir: 'in'  },
+  { hash: '0xe4f7…a901', party: 'Global Trade Ltd', amount: '+12,000', currency: 'USDC', date: 'Mar 17', status: 'matched',   dir: 'in'  },
+  { hash: '0x9a8b…3a2b', party: 'Sunrise Imports',  amount: '+4,900',  currency: 'USDC', date: 'Mar 16', status: 'partial',   dir: 'in'  },
+  { hash: '0xb2d1…44fa', party: '—',                 amount: '+8,200',  currency: 'USDC', date: 'Mar 20', status: 'unmatched', dir: 'in'  },
+  { hash: '0xa1b2…a7b8', party: 'AWS Services',     amount: '−2,200',  currency: 'USDC', date: 'Mar 10', status: 'matched',   dir: 'out' },
+]
+
+const txStatusStyle: Record<string, string> = {
+  matched:   'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400',
+  partial:   'bg-amber-50  dark:bg-amber-500/10  text-amber-700  dark:text-amber-400',
+  unmatched: 'bg-gray-100  dark:bg-white/[0.07]  text-gray-500   dark:text-gray-400',
+}
+
+const txStatusLabel: Record<string, string> = {
+  matched: 'Matched', partial: 'Partial', unmatched: 'Unmatched',
+}
 
 // ── Status badge config ───────────────────────────────────────────────────────
 const STATUS_BADGE: Record<PayStatus, { label: string; cls: string }> = {
@@ -295,6 +315,58 @@ export default function Dashboard() {
             Best month: <span className="font-medium text-gray-700 dark:text-gray-300">Feb · +$12,200</span>
           </div>
         </div>
+      </Card>
+
+      {/* ── Recent Transactions ────────────────────────────────────────────── */}
+      <Card className="overflow-hidden">
+        <div className="flex items-center justify-between px-5 pt-4 pb-3 border-b border-gray-50 dark:border-white/5">
+          <div>
+            <h3 className="font-grotesk font-semibold text-sm text-gray-900 dark:text-white">Recent Transactions</h3>
+            <p className="text-[10px] text-gray-400 mt-0.5">On-chain activity · last 30 days</p>
+          </div>
+          <button
+            onClick={() => navigate('/reconciliation')}
+            className="text-xs text-orange-500 hover:text-orange-600 font-medium flex items-center gap-1 transition-colors"
+          >
+            View All <ArrowRight className="w-3 h-3" />
+          </button>
+        </div>
+        <table className="w-full text-xs">
+          <thead>
+            <tr className="border-b border-gray-100 dark:border-white/[0.06]">
+              {['Dir', 'TX Hash', 'Counterparty', 'Amount', 'Date', 'Status'].map((h) => (
+                <th key={h} className={`px-4 py-2.5 text-[10px] font-semibold text-gray-400 uppercase tracking-wide ${h === 'Amount' ? 'text-right' : 'text-left'}`}>{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-100/60 dark:divide-white/[0.04]">
+            {recentTxRows.map((tx) => (
+              <tr
+                key={tx.hash}
+                onClick={() => navigate('/reconciliation')}
+                className="hover:bg-gray-50/60 dark:hover:bg-white/[0.03] transition-colors cursor-pointer"
+              >
+                <td className="px-4 py-3">
+                  {tx.dir === 'in'
+                    ? <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"><ArrowDown className="w-2.5 h-2.5" />IN</span>
+                    : <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-300"><ArrowUp className="w-2.5 h-2.5" />OUT</span>
+                  }
+                </td>
+                <td className="px-4 py-3 font-mono text-gray-400 dark:text-gray-500 whitespace-nowrap">{tx.hash}</td>
+                <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-200 whitespace-nowrap">{tx.party}</td>
+                <td className={`px-4 py-3 text-right font-semibold whitespace-nowrap ${tx.amount.startsWith('+') ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500 dark:text-red-400'}`}>
+                  {tx.amount} <span className="text-gray-400 font-normal">{tx.currency}</span>
+                </td>
+                <td className="px-4 py-3 text-gray-500 dark:text-gray-400 whitespace-nowrap">{tx.date}</td>
+                <td className="px-4 py-3">
+                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold ${txStatusStyle[tx.status] ?? txStatusStyle.unmatched}`}>
+                    {txStatusLabel[tx.status] ?? tx.status}
+                  </span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </Card>
 
     </div>

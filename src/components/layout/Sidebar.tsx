@@ -4,7 +4,7 @@ import {
   LayoutDashboard, GitCompareArrows, Vault,
   ArrowDownCircle, ShieldCheck,
   FileText, ListChecks, ChevronDown, PanelLeftClose,
-  CheckCircle2, Users,
+  CheckCircle2, Users, Settings as SettingsIcon,
 } from 'lucide-react'
 import { useUiStore } from '@/stores/uiStore'
 import { useUserStore, type RoleKey } from '@/stores/userStore'
@@ -22,6 +22,7 @@ const navItems = [
   { to: '/approvals',       icon: CheckCircle2,       key: 'nav.approvals',      badge: '2', badgeColor: 'bg-amber-100 dark:bg-amber-500/15 text-amber-600 dark:text-amber-400' },
   { to: '/reconciliation',  icon: GitCompareArrows,   key: 'nav.reconciliation' },
   { to: '/treasury',        icon: Vault,              key: 'nav.treasury' },
+  { to: '/settings',        icon: SettingsIcon,       key: 'nav.settings' },
 ]
 
 const comingSoonItems = [

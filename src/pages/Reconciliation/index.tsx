@@ -5,6 +5,7 @@ import {
   ChevronRight, Repeat2, Search, FileQuestion,
   SearchX, CheckCircle2, Zap, Clock,
   ArrowDown, ArrowUp, X, Send, Users, Paperclip,
+  CheckCircle, BookOpen, FileText,
 } from 'lucide-react'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
@@ -467,13 +468,47 @@ const matchedRows = [
   { ref: 'PAY-20260310-007', party: 'AWS Services',     amount: '2,200',  currency: 'USDC', hash: '0xa1b2c3d4e5f6a7b8…', date: 'Mar 10, 2026', network: 'ETH', dir: 'out' },
 ]
 
-function MatchedTab() {
+interface MatchDetail {
+  ref: string
+  type: 'invoice' | 'bill'
+  party: string
+  amount: string
+  currency: string
+  network: string
+  txHash: string
+  txDate: string
+  dir: 'in' | 'out'
+  matchedOn: string
+}
+
+const MATCH_DETAILS: Record<string, MatchDetail> = {
+  'INV-20260318-001': {
+    ref: 'INV-20260318-001', type: 'invoice', party: 'Acme Corp',
+    amount: '5,000', currency: 'USDC', network: 'ETH',
+    txHash: '0x5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b', txDate: 'Mar 18, 2026 · 14:20 UTC',
+    dir: 'in', matchedOn: 'Mar 18, 2026',
+  },
+  'INV-20260317-002': {
+    ref: 'INV-20260317-002', type: 'invoice', party: 'Global Trade Ltd',
+    amount: '12,000', currency: 'USDC', network: 'ETH',
+    txHash: '0xe4f7a901b2c3d4e5f6a7b8c9d0e1f2a3', txDate: 'Mar 17, 2026 · 10:05 UTC',
+    dir: 'in', matchedOn: 'Mar 17, 2026',
+  },
+  'PAY-20260310-007': {
+    ref: 'PAY-20260310-007', type: 'bill', party: 'AWS Services',
+    amount: '2,200', currency: 'USDC', network: 'ETH',
+    txHash: '0xa1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6', txDate: 'Mar 10, 2026 · 16:06 UTC',
+    dir: 'out', matchedOn: 'Mar 10, 2026',
+  },
+}
+
+function MatchedTab({ onSelect }: { onSelect: (ref: string) => void }) {
   return (
     <Card className="overflow-hidden">
       <table className="w-full text-xs">
         <thead>
           <tr className="border-b border-gray-100 dark:border-white/[0.06]">
-            {['Dir', 'Reference', 'Counterparty', 'Amount', 'TX Hash', 'Network', 'Date'].map((h) => (
+            {['Dir', 'Reference', 'Counterparty', 'Amount', 'TX Hash', 'Network', 'Date', ''].map((h) => (
               <th key={h} className={`px-4 py-2.5 text-[10px] font-semibold text-gray-400 uppercase tracking-wide ${h === 'Amount' ? 'text-right' : 'text-left'}`}>{h}</th>
             ))}
           </tr>
@@ -495,6 +530,14 @@ function MatchedTab() {
               <td className="px-4 py-3 font-mono text-gray-400 whitespace-nowrap">{item.hash}</td>
               <td className="px-4 py-3"><PoolTag network={item.network} /></td>
               <td className="px-4 py-3 text-gray-500 dark:text-gray-400 whitespace-nowrap">{item.date}</td>
+              <td className="px-4 py-3 text-right">
+                <button
+                  onClick={() => onSelect(item.ref)}
+                  className="text-[10px] text-orange-500 hover:text-orange-600 font-semibold flex items-center gap-0.5 ml-auto whitespace-nowrap"
+                >
+                  View <ChevronRight className="w-3 h-3" />
+                </button>
+              </td>
             </tr>
           ))}
         </tbody>
@@ -556,6 +599,228 @@ function TransactionsTab() {
   )
 }
 
+// ── MatchDetailModal ─────────────────────────────────────────────────────────
+function MatchDetailModal({
+  matchRef, onClose, onJE, onWater,
+}: { matchRef: string; onClose: () => void; onJE: () => void; onWater: () => void }) {
+  const detail = MATCH_DETAILS[matchRef]
+  if (!detail) return null
+  return (
+    <div className="modal-backdrop" onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="modal-box w-full max-w-lg" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-gray-100 dark:border-white/[0.06]">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center shrink-0">
+              <CheckCircle className="w-3.5 h-3.5 text-emerald-500" />
+            </div>
+            <h3 className="font-grotesk font-semibold text-base text-gray-900 dark:text-white">Match Detail</h3>
+          </div>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+        <div className="p-5 space-y-4">
+          {/* Document side */}
+          <div className="rounded-xl border border-gray-100 dark:border-white/[0.08] bg-gray-50/50 dark:bg-white/[0.02] p-4 space-y-2">
+            <p className="text-[10px] uppercase tracking-widest font-semibold text-gray-400">
+              {detail.type === 'invoice' ? 'Invoice (AR)' : 'Bill (AP)'}
+            </p>
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-[10px] font-mono text-gray-400">{detail.ref}</p>
+                <p className="text-sm font-semibold text-gray-900 dark:text-white mt-0.5">{detail.party}</p>
+                <p className="text-xs text-gray-400 mt-0.5">Matched on {detail.matchedOn}</p>
+              </div>
+              <p className={`text-sm font-semibold ${detail.dir === 'out' ? 'text-red-500 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
+                {detail.dir === 'in' ? '+' : '−'}{detail.amount}{' '}
+                <span className="text-gray-400 font-normal text-xs">{detail.currency}</span>
+              </p>
+            </div>
+          </div>
+          {/* TX side */}
+          <div className="rounded-xl border border-gray-100 dark:border-white/[0.08] bg-gray-50/50 dark:bg-white/[0.02] p-4 space-y-2">
+            <p className="text-[10px] uppercase tracking-widest font-semibold text-gray-400">On-chain Transaction</p>
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-[10px] font-mono text-gray-400 break-all">{detail.txHash}</p>
+                <p className="text-xs text-gray-400 mt-0.5">{detail.txDate}</p>
+              </div>
+              <PoolTag network={detail.network} />
+            </div>
+          </div>
+          {/* Actions */}
+          <div className="flex items-center gap-2 pt-1">
+            <button
+              onClick={onJE}
+              className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-gray-200 dark:border-white/10 text-xs font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
+            >
+              <BookOpen className="w-3.5 h-3.5" /> Journal Entry
+            </button>
+            <button
+              onClick={onWater}
+              className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-orange-500 hover:bg-orange-600 text-white text-xs font-semibold transition-colors"
+            >
+              <FileText className="w-3.5 h-3.5" /> Settlement Receipt (水單)
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── JournalEntryModal ─────────────────────────────────────────────────────────
+function JournalEntryModal({ matchRef, onClose }: { matchRef: string | null; onClose: () => void }) {
+  const detail = matchRef ? MATCH_DETAILS[matchRef] : null
+  return (
+    <div className="modal-backdrop" onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="modal-box w-full max-w-lg" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-gray-100 dark:border-white/[0.06]">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center shrink-0">
+              <BookOpen className="w-3.5 h-3.5 text-blue-500" />
+            </div>
+            <h3 className="font-grotesk font-semibold text-base text-gray-900 dark:text-white">Journal Entry</h3>
+          </div>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+        <div className="p-5 space-y-3">
+          {detail && (
+            <>
+              <p className="text-[10px] text-gray-400 font-mono">{detail.ref} · {detail.matchedOn}</p>
+              <div className="rounded-xl border border-gray-100 dark:border-white/[0.08] overflow-hidden">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="border-b border-gray-100 dark:border-white/[0.06] bg-gray-50/60 dark:bg-white/[0.02]">
+                      {['Account', 'Debit', 'Credit'].map((h) => (
+                        <th key={h} className="px-4 py-2 text-[10px] font-semibold text-gray-400 uppercase tracking-wide text-left">{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100/60 dark:divide-white/[0.04]">
+                    {detail.dir === 'in' ? (
+                      <>
+                        <tr>
+                          <td className="px-4 py-2.5 text-gray-700 dark:text-gray-300">Cash / USDC Wallet</td>
+                          <td className="px-4 py-2.5 font-semibold text-gray-800 dark:text-gray-200">{detail.amount} {detail.currency}</td>
+                          <td className="px-4 py-2.5 text-gray-400">—</td>
+                        </tr>
+                        <tr>
+                          <td className="px-4 py-2.5 text-gray-700 dark:text-gray-300">Accounts Receivable</td>
+                          <td className="px-4 py-2.5 text-gray-400">—</td>
+                          <td className="px-4 py-2.5 font-semibold text-gray-800 dark:text-gray-200">{detail.amount} {detail.currency}</td>
+                        </tr>
+                      </>
+                    ) : (
+                      <>
+                        <tr>
+                          <td className="px-4 py-2.5 text-gray-700 dark:text-gray-300">Accounts Payable</td>
+                          <td className="px-4 py-2.5 font-semibold text-gray-800 dark:text-gray-200">{detail.amount} {detail.currency}</td>
+                          <td className="px-4 py-2.5 text-gray-400">—</td>
+                        </tr>
+                        <tr>
+                          <td className="px-4 py-2.5 text-gray-700 dark:text-gray-300">Cash / USDC Wallet</td>
+                          <td className="px-4 py-2.5 text-gray-400">—</td>
+                          <td className="px-4 py-2.5 font-semibold text-gray-800 dark:text-gray-200">{detail.amount} {detail.currency}</td>
+                        </tr>
+                      </>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+              <p className="text-[10px] text-gray-400">Auto-generated · pending ERP export</p>
+            </>
+          )}
+          <div className="flex justify-end pt-1">
+            <button
+              onClick={onClose}
+              className="px-4 py-2 rounded-lg bg-orange-500 hover:bg-orange-600 text-white text-xs font-semibold transition-colors flex items-center gap-1.5"
+            >
+              <Download className="w-3.5 h-3.5" /> Export to ERP
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── SettlementReceiptModal ────────────────────────────────────────────────────
+function SettlementReceiptModal({ matchRef, onClose }: { matchRef: string | null; onClose: () => void }) {
+  const detail = matchRef ? MATCH_DETAILS[matchRef] : null
+  return (
+    <div className="modal-backdrop" onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="modal-box w-full max-w-md" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-gray-100 dark:border-white/[0.06]">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg bg-orange-50 dark:bg-orange-500/10 flex items-center justify-center shrink-0">
+              <FileText className="w-3.5 h-3.5 text-orange-500" />
+            </div>
+            <h3 className="font-grotesk font-semibold text-base text-gray-900 dark:text-white">Settlement Receipt · 水單</h3>
+          </div>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+        <div className="p-5 space-y-4">
+          {detail && (
+            <>
+              <div className="rounded-xl border border-gray-100 dark:border-white/[0.08] p-4 space-y-3 bg-gray-50/30 dark:bg-white/[0.02]">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] uppercase tracking-widest font-semibold text-gray-400">Receipt No.</span>
+                  <span className="text-xs font-mono text-gray-600 dark:text-gray-300">OR-{detail.ref.replace(/\D/g, '').slice(-6)}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] uppercase tracking-widest font-semibold text-gray-400">Counterparty</span>
+                  <span className="text-xs font-medium text-gray-700 dark:text-gray-300">{detail.party}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] uppercase tracking-widest font-semibold text-gray-400">Amount</span>
+                  <span className={`text-sm font-semibold ${detail.dir === 'out' ? 'text-red-500 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
+                    {detail.dir === 'in' ? '+' : '−'}{detail.amount} {detail.currency}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] uppercase tracking-widest font-semibold text-gray-400">Network</span>
+                  <PoolTag network={detail.network} />
+                </div>
+                <div className="flex items-start justify-between gap-3">
+                  <span className="text-[10px] uppercase tracking-widest font-semibold text-gray-400 shrink-0">TX Hash</span>
+                  <span className="text-[10px] font-mono text-gray-500 dark:text-gray-400 break-all text-right">{detail.txHash}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] uppercase tracking-widest font-semibold text-gray-400">Settled</span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400">{detail.txDate}</span>
+                </div>
+                <div className="pt-2 border-t border-gray-100 dark:border-white/[0.06] flex items-center gap-1.5">
+                  <CheckCircle className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                  <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">Confirmed Match</span>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={onClose}
+                  className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-gray-200 dark:border-white/10 text-xs font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
+                >
+                  <Download className="w-3.5 h-3.5" /> Download PDF
+                </button>
+                <button
+                  onClick={onClose}
+                  className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-orange-500 hover:bg-orange-600 text-white text-xs font-semibold transition-colors"
+                >
+                  <Send className="w-3.5 h-3.5" /> Send to Counterparty
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ── Main page ────────────────────────────────────────────────────────────────
 // ── Currency+Network options (shared with Approvals) ─────────────────────────
 const CN_OPTIONS = [
@@ -579,6 +844,11 @@ export default function Reconciliation() {
   const { t } = useTranslation()
   const [activeTab, setActiveTab] = useState<Tab>('reconcile')
   const { openModal, showToast } = useUiStore()
+
+  // ── Match detail modal state ──────────────────────────────────────────────
+  const [selectedMatchRef, setSelectedMatchRef] = useState<string | null>(null)
+  const [jeOpen, setJeOpen] = useState(false)
+  const [waterOpen, setWaterOpen] = useState(false)
 
   // ── New Bill modal state ──────────────────────────────────────────────────
   const [billModalOpen, setBillModalOpen] = useState(false)
@@ -696,7 +966,7 @@ export default function Reconciliation() {
         {activeTab === 'reconcile'    && <ReconcileTab />}
         {activeTab === 'invoice'      && <InvoiceTab />}
         {activeTab === 'bills'        && <BillsTab />}
-        {activeTab === 'matched'      && <MatchedTab />}
+        {activeTab === 'matched'      && <MatchedTab onSelect={setSelectedMatchRef} />}
         {activeTab === 'transactions' && <TransactionsTab />}
       </div>
 
@@ -862,6 +1132,28 @@ export default function Reconciliation() {
           </div>
         </div>
       </div>
+    )}
+
+    {/* ── Match detail modals ─────────────────────────────────────────────── */}
+    {selectedMatchRef && !jeOpen && !waterOpen && (
+      <MatchDetailModal
+        matchRef={selectedMatchRef}
+        onClose={() => setSelectedMatchRef(null)}
+        onJE={() => setJeOpen(true)}
+        onWater={() => setWaterOpen(true)}
+      />
+    )}
+    {jeOpen && (
+      <JournalEntryModal
+        matchRef={selectedMatchRef}
+        onClose={() => setJeOpen(false)}
+      />
+    )}
+    {waterOpen && (
+      <SettlementReceiptModal
+        matchRef={selectedMatchRef}
+        onClose={() => setWaterOpen(false)}
+      />
     )}
     </>
   ) // end return
