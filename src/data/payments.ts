@@ -52,7 +52,7 @@ export const PAYMENTS: Payment[] = [
     deadline: 'Mar 22, 2026', deadlineExpired: true,
     createdDate: 'Mar 16, 2026', createdTime: '09:30', createdBy: '陳琳達',
     toAddress: '0x3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b',
-    policyKyt: true, policyLiquidity: false, policyDoa: 'CFO',
+    policyKyt: true, policyLiquidity: false, policyDoa: 'Manager + CFO',
     chain: [
       { role: 'Finance Specialist', status: 'approved', name: '陳琳達',  date: 'Mar 16 · 09:30', note: 'Submitted for approval' },
       { role: 'Manager',            status: 'approved', name: '王大明',  date: 'Mar 17 · 11:00', note: 'Approved' },
@@ -65,7 +65,7 @@ export const PAYMENTS: Payment[] = [
     deadline: 'Mar 20, 2026', deadlineExpired: true,
     createdDate: 'Mar 15, 2026', createdTime: '16:45', createdBy: 'Kevin Wu',
     toAddress: '0x7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d',
-    policyKyt: true, policyLiquidity: true, policyDoa: 'CFO',
+    policyKyt: true, policyLiquidity: true, policyDoa: 'Manager + CFO',
     chain: [
       { role: 'Finance Specialist', status: 'approved', name: 'Kevin Wu',  date: 'Mar 15 · 16:45', note: 'Submitted for approval' },
       { role: 'Manager',            status: 'approved', name: '王大明',    date: 'Mar 16 · 10:20', note: 'Approved' },
@@ -117,7 +117,7 @@ export const PAYMENTS: Payment[] = [
     deadline: 'Mar 15, 2026', deadlineExpired: false,
     createdDate: 'Mar 10, 2026', createdTime: '16:06', createdBy: 'Lillian Chen',
     toAddress: '0x1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b',
-    policyKyt: true, policyLiquidity: true, policyDoa: 'Finance',
+    policyKyt: true, policyLiquidity: true, policyDoa: 'Manager',
     chain: [
       { role: 'Finance Specialist', status: 'approved', name: 'Lillian Chen', date: 'Mar 10 · 16:06', note: 'Submitted for approval' },
       { role: 'Manager',            status: 'approved', name: '王大明',       date: 'Mar 11 · 09:00', note: 'Approved' },
