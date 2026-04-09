@@ -344,7 +344,7 @@ function PaymentDrawer({ payment, onClose, roleKey, onApprove, onReject }: {
         <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-3">Approval Chain</p>
         <div>
           {(() => {
-            const visibleChain = payment.chain.filter((s) => s.status !== 'queued')
+            const visibleChain = payment.chain.filter((s) => s.status !== 'queued' || s.note.startsWith('Required'))
             const needsApproval = visibleChain.some((s) => s.role !== 'Finance Specialist')
             return visibleChain.map((step, i) => (
               <ChainStep

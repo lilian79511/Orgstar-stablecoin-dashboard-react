@@ -420,7 +420,7 @@ export default function Dashboard() {
             <div className="px-5 pb-4">
               <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-2">Approval Chain</p>
               <div className="space-y-2">
-                {selectedPayment.chain.filter((s) => s.status !== 'queued').map((step) => {
+                {selectedPayment.chain.filter((s) => s.status !== 'queued' || s.note.startsWith('Required')).map((step) => {
                   const isFinance = step.role === 'Finance Specialist'
                   const hasOtherApprovers = selectedPayment.chain.some((s) => s.role !== 'Finance Specialist' && s.status !== 'queued')
                   const labelCls = { approved: 'text-emerald-600 dark:text-emerald-400', awaiting: 'text-amber-600 dark:text-amber-400', queued: 'text-gray-400', rejected: 'text-red-500' }[step.status]
