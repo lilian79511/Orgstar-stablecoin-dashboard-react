@@ -41,7 +41,7 @@ interface Payment {
 }
 
 // ── Data ─────────────────────────────────────────────────────────────────────
-const PAYMENTS: Payment[] = [
+const INITIAL_PAYMENTS: Payment[] = [
   {
     id: 'p1', ref: 'PAY-20260318-001', payee: 'Vendor Inc', amount: 30000, currency: 'USDC',
     purpose: 'Software License', status: 'pending-manager',
@@ -188,7 +188,7 @@ function QRCode() {
 }
 
 // ── Approval chain step ───────────────────────────────────────────────────────
-function ChainStep({ step, isLast }: { step: ApprovalStep; isLast: boolean }) {
+function ChainStep({ step, isLast, labelOverride }: { step: ApprovalStep; isLast: boolean; labelOverride?: string }) {
   const dotCls = {
     approved: 'bg-emerald-500 border-emerald-500',
     awaiting:  'bg-white border-amber-400',
@@ -203,7 +203,7 @@ function ChainStep({ step, isLast }: { step: ApprovalStep; isLast: boolean }) {
     rejected:  'bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-400',
   }[step.status]
 
-  const badgeLabel = { approved: 'Approved', awaiting: 'Awaiting', queued: 'Queued', rejected: 'Rejected' }[step.status]
+  const badgeLabel = labelOverride ?? ({ approved: 'Approved', awaiting: 'Awaiting', queued: 'Queued', rejected: 'Rejected' }[step.status])
 
   const DotIcon = step.status === 'approved' ? CheckCircle2
     : step.status === 'rejected' ? XCircle
@@ -232,7 +232,13 @@ function ChainStep({ step, isLast }: { step: ApprovalStep; isLast: boolean }) {
 }
 
 // ── Detail Drawer ────────────────────────────────────────────────────────────
-function PaymentDrawer({ payment, onClose, roleKey }: { payment: Payment | null; onClose: () => void; roleKey: string }) {
+function PaymentDrawer({ payment, onClose, roleKey, onApprove, onReject }: {
+  payment: Payment | null
+  onClose: () => void
+  roleKey: string
+  onApprove: (id: string) => void
+  onReject: (id: string) => void
+}) {
   const { showToast } = useUiStore()
   const [comment, setComment] = useState('')
   const [confirmOpen, setConfirmOpen] = useState(false)
@@ -248,12 +254,14 @@ function PaymentDrawer({ payment, onClose, roleKey }: { payment: Payment | null;
   }
 
   function handleApproveConfirm() {
-    showToast(`Payment ${payment!.ref} approved and sent`, 'success')
+    onApprove(payment!.id)
+    showToast(`Payment ${payment!.ref} approved`, 'success')
     setConfirmOpen(false)
     onClose()
   }
 
   function handleReject() {
+    onReject(payment!.id)
     showToast(`Payment ${payment!.ref} rejected`, 'error')
     onClose()
   }
@@ -335,9 +343,18 @@ function PaymentDrawer({ payment, onClose, roleKey }: { payment: Payment | null;
       <div className="mb-5">
         <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-3">Approval Chain</p>
         <div>
-          {payment.chain.map((step, i) => (
-            <ChainStep key={step.role} step={step} isLast={i === payment.chain.length - 1} />
-          ))}
+          {(() => {
+            const visibleChain = payment.chain.filter((s) => s.status !== 'queued')
+            const needsApproval = visibleChain.some((s) => s.role !== 'Finance Specialist')
+            return visibleChain.map((step, i) => (
+              <ChainStep
+                key={step.role}
+                step={step}
+                isLast={i === visibleChain.length - 1}
+                labelOverride={step.role === 'Finance Specialist' ? (needsApproval ? 'Created' : 'Paid') : undefined}
+              />
+            ))
+          })()}
         </div>
       </div>
 
@@ -518,6 +535,7 @@ function getPolicyTier(amount: number): 1 | 2 | 3 {
 // ── Main page ─────────────────────────────────────────────────────────────────
 export default function Approvals() {
   const location = useLocation()
+  const [payments, setPayments] = useState<Payment[]>(INITIAL_PAYMENTS)
   const [tab,      setTab]      = useState<TabKey>('all')
   const [sortCol,  setSortCol]  = useState<SortCol>('created')
   const [sortDir,  setSortDir]  = useState<'asc' | 'desc'>('desc')
@@ -541,15 +559,14 @@ export default function Approvals() {
   useEffect(() => {
     const ref = (location.state as { openPaymentRef?: string } | null)?.openPaymentRef
     if (ref) {
-      const p = PAYMENTS.find((x) => x.ref === ref)
+      const p = payments.find((x) => x.ref === ref)
       if (p) setSelected(p)
-      // Clear state so back-navigation doesn't re-open
       window.history.replaceState({}, '')
     }
-  }, [location.state])
+  }, [location.state]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const awaitingCount = getTabPayments(PAYMENTS, 'awaiting-sig', profile.roleKey).length
-  const pendingCount  = getTabPayments(PAYMENTS, 'pending', profile.roleKey).length
+  const awaitingCount = getTabPayments(payments, 'awaiting-sig', profile.roleKey).length
+  const pendingCount  = getTabPayments(payments, 'pending', profile.roleKey).length
 
   const parsedAmount = parseFloat(nbAmount) || 0
   const policyTier = getPolicyTier(parsedAmount)
@@ -606,10 +623,55 @@ export default function Approvals() {
   const hasFilter = payeeFilter !== '' || statusFilter !== ''
 
   const visible = sortPayments(
-    getTabPayments(PAYMENTS, tab, profile.roleKey)
+    getTabPayments(payments, tab, profile.roleKey)
       .filter((p) => payeeFilter === '' || p.payee.toLowerCase().includes(payeeFilter.toLowerCase()))
       .filter((p) => statusFilter === '' || p.status === statusFilter)
   )
+
+  function handleApprovePayment(id: string) {
+    const now = new Date()
+    const dateStr = `Apr 07 · ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`
+    const roleLabel = profile.roleKey === 'manager' ? 'Manager' : 'CFO'
+    setPayments((prev) => prev.map((p) => {
+      if (p.id !== id) return p
+      const updatedChain = p.chain.map((step) => {
+        if (step.role === roleLabel && step.status === 'awaiting') {
+          return { ...step, status: 'approved' as const, date: dateStr, note: 'Approved' }
+        }
+        if (roleLabel === 'Manager' && step.role === 'CFO' && step.status === 'queued' && p.policyDoa === 'CFO') {
+          return { ...step, status: 'awaiting' as const, note: 'Required — amount ≥ $50,000' }
+        }
+        return step
+      })
+      const stillAwaiting = updatedChain.some((s) => s.status === 'awaiting')
+      return { ...p, chain: updatedChain, status: stillAwaiting ? 'pending-manager' : 'paid' }
+    }))
+  }
+
+  function handleRejectPayment(id: string) {
+    const now = new Date()
+    const dateStr = `Apr 07 · ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`
+    const roleLabel = profile.roleKey === 'manager' ? 'Manager' : 'CFO'
+    setPayments((prev) => prev.map((p) => {
+      if (p.id !== id) return p
+      const updatedChain = p.chain.map((step) => {
+        if (step.role === roleLabel && step.status === 'awaiting') {
+          return { ...step, status: 'rejected' as const, date: dateStr, note: 'Rejected' }
+        }
+        return step
+      })
+      return { ...p, chain: updatedChain, status: 'rejected' }
+    }))
+  }
+
+  function getDisplayStatus(p: Payment): PayStatus {
+    if (p.status !== 'pending-manager') return p.status
+    const awaitingRole = p.chain.find((s) => s.status === 'awaiting')?.role ?? ''
+    const isMyTurn =
+      (profile.roleKey === 'manager' && awaitingRole === 'Manager') ||
+      (profile.roleKey === 'cfo'     && awaitingRole === 'CFO')
+    return isMyTurn ? 'awaiting-sig' : 'pending-manager'
+  }
 
   function getRowAction(p: Payment) {
     // Auditor: always view-only
@@ -668,11 +730,64 @@ export default function Approvals() {
   }
 
   function handleNewBillSubmit() {
+    const currency = nbCN.split('·')[0] as 'USDC' | 'USDT'
+    const now = new Date()
+    const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`
+    const seq = String(payments.length + 1).padStart(3, '0')
+    const creatorName = profile.name || 'Finance Specialist'
+
+    let chain: ApprovalStep[]
+    let status: PayStatus
+    let policyDoa: string
+
     if (policyTier === 1) {
-      showToast('Payment submitted — will execute automatically', 'success')
+      chain = [
+        { role: 'Finance Specialist', status: 'approved', name: creatorName, date: `Apr 07 · ${timeStr}`, note: 'Submitted — auto-executed (amount < $1,000)' },
+        { role: 'Manager', status: 'queued', name: '王大明', note: 'Not required for this amount' },
+        { role: 'CFO', status: 'queued', name: '李財長', note: 'Not required for this amount' },
+      ]
+      status = 'paid'
+      policyDoa = 'Finance'
+    } else if (policyTier === 2) {
+      chain = [
+        { role: 'Finance Specialist', status: 'approved', name: creatorName, date: `Apr 07 · ${timeStr}`, note: 'Submitted for approval' },
+        { role: 'Manager', status: 'awaiting', name: '王大明', note: 'Required — amount ≥ $1,000' },
+        { role: 'CFO', status: 'queued', name: '李財長', note: 'Not required for this amount' },
+      ]
+      status = 'pending-manager'
+      policyDoa = 'Manager'
     } else {
-      showToast('Payment request submitted for approval', 'success')
+      chain = [
+        { role: 'Finance Specialist', status: 'approved', name: creatorName, date: `Apr 07 · ${timeStr}`, note: 'Submitted for approval' },
+        { role: 'Manager', status: 'awaiting', name: '王大明', note: 'Required — amount ≥ $1,000' },
+        { role: 'CFO', status: 'queued', name: '李財長', note: 'Required — amount ≥ $50,000' },
+      ]
+      status = 'pending-manager'
+      policyDoa = 'CFO'
     }
+
+    const newPayment: Payment = {
+      id: `p${Date.now()}`,
+      ref: `PAY-20260407-${seq}`,
+      payee: nbPayee.trim(),
+      amount: parsedAmount,
+      currency,
+      purpose: nbPurpose.trim() || 'Payment',
+      status,
+      deadline: nbDeadline ? new Date(nbDeadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : null,
+      deadlineExpired: false,
+      createdDate: 'Apr 07, 2026',
+      createdTime: timeStr,
+      createdBy: creatorName,
+      toAddress: nbWallet.trim(),
+      policyKyt: kytPass,
+      policyLiquidity: liquidityOk,
+      policyDoa,
+      chain,
+    }
+
+    setPayments((prev) => [newPayment, ...prev])
+    showToast(policyTier === 1 ? 'Payment submitted — executed automatically' : 'Payment request submitted for approval', 'success')
     setNewBillOpen(false)
     setNbPayee(''); setNbWallet(''); setNbAmount(''); setNbCN('USDC·ETH'); setNbPurpose(''); setNbDeadline('')
   }
@@ -804,7 +919,7 @@ export default function Approvals() {
                     </span>
                   </td>
                   <td className="px-5 py-4 whitespace-nowrap">
-                    <StatusPill status={p.status} />
+                    <StatusPill status={getDisplayStatus(p)} />
                   </td>
                   <td className="px-5 py-4 whitespace-nowrap">
                     {p.deadline ? (
@@ -836,7 +951,13 @@ export default function Approvals() {
 
       {/* Detail drawer */}
       {selected && (
-        <PaymentDrawer payment={selected} onClose={() => setSelected(null)} roleKey={profile.roleKey} />
+        <PaymentDrawer
+          payment={selected}
+          onClose={() => setSelected(null)}
+          roleKey={profile.roleKey}
+          onApprove={handleApprovePayment}
+          onReject={handleRejectPayment}
+        />
       )}
 
       {/* New Bill modal */}
