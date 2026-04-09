@@ -138,7 +138,7 @@ const INITIAL_PAYMENTS: Payment[] = [
 // ── Status config ─────────────────────────────────────────────────────────────
 const STATUS_CFG: Record<PayStatus, { label: string; cls: string; Icon: React.ElementType }> = {
   'pending-manager': { label: 'Pending',         cls: 'bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400',       Icon: Clock },
-  'awaiting-sig':    { label: 'Awaiting Sig.',   cls: 'bg-violet-50 dark:bg-violet-500/10 text-violet-700 dark:text-violet-400',   Icon: PenLine },
+  'awaiting-sig':    { label: 'Awaiting Sig.',   cls: 'bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400',     Icon: PenLine },
   'rejected':        { label: 'Rejected',        cls: 'bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-400',               Icon: XCircle },
   'paid':            { label: 'Paid',            cls: 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400', Icon: CheckCircle2 },
 }
